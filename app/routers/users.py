@@ -3,9 +3,9 @@ from sqlalchemy.orm import Session
 from functools import wraps
 
 from app.database import get_db
-from app.schemas import UserCreate, UserResponse
-from app.services.user_service import service_create_user
-from app.errors import UsernameAlreadyExists, EmailAlreadyExists, PhoneNumAlreadyExists, DbError
+from app.schemas import UserCreate, UserResponse, UserLogin, TokenResponse
+from app.services.user_service import service_register_user, service_login_user
+from app.errors import UserNotFound, UsernameAlreadyExists, EmailAlreadyExists, PhoneNumAlreadyExists, DbError
 
 
 router = APIRouter()
@@ -16,6 +16,9 @@ def handle_user_errors(func):
     def wrapper(*args, **kwargs):
         try:
             return func(*args, **kwargs)
+
+        except UserNotFound:
+            raise HTTPException(status_code=404, detail="User has not found")
 
         except UsernameAlreadyExists:
             raise HTTPException(status_code=400, detail="User with this username already exist.")
@@ -32,9 +35,23 @@ def handle_user_errors(func):
     return wrapper
 
 
-@router.post('/',response_model=UserResponse)
+@router.post('/register', response_model=UserResponse)
 @handle_user_errors
-def create_user(user: UserCreate, db: Session = Depends(get_db)):
-    return service_create_user(user, db)
+def register_user(user: UserCreate, db: Session = Depends(get_db)):
+    return service_register_user(user, db)
+
+
+@router.post("/login", response_model=TokenResponse)
+@handle_user_errors
+def login_user(user: UserLogin, db: Session = Depends(get_db)):
+    return service_login_user(user, db)
+
+
+@router.post("/delete/{user_id}", response_model=UserResponse)
+@handle_user_errors
+def delete_user(user_id: int, db: Session = Depends(get_db)):
+    pass
+
+
 
 

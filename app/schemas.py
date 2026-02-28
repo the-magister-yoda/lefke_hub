@@ -21,4 +21,18 @@ class UserResponse(BaseModel):
         from_attributes = True
 
 
+class UserLogin(BaseModel):
+    username: str
+    password: str
+
+
+class TokenResponse(BaseModel):
+    access_token: str
+    token_type: str
+    # Здесь не нужно исп-ть класс config from_attributes = True.
+    # Он используется, когда возвращаешь ORM объект.
+    # Здесь ты возвращаешь обычный dict.
+
+
+
 

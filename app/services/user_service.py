@@ -1,11 +1,11 @@
 from sqlalchemy.exc import IntegrityError
 
 from app.models import User
-from app.core.security import hash_password
-from app.errors import UsernameAlreadyExists, EmailAlreadyExists, PhoneNumAlreadyExists, DbError
+from app.core.security import hash_password, verify_password, create_access_token
+from app.errors import UserNotFound, UsernameAlreadyExists, EmailAlreadyExists, PhoneNumAlreadyExists, DbError, WrongPassword
 
 
-def service_create_user(user, db):
+def service_register_user(user, db):
     existing_user = db.query(User).filter(
         (User.username == user.username) |
         (User.email == user.email) |
@@ -36,3 +36,21 @@ def service_create_user(user, db):
 
     db.refresh(db_user)
     return db_user
+
+
+def service_login_user(user, db):
+    db_user = db.query(User).filter(User.username == user.username).first()
+
+    if db_user is None:
+        raise UserNotFound()
+
+    if not verify_password(user.password, db_user.hashed_password):
+        raise WrongPassword()
+
+    access_token = create_access_token(
+        data={"sub": str(db_user.id), "role": db_user.role.value}
+    )
+
+    return {"access_token": access_token, "token_type": "bearer"}
+
+
