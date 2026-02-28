@@ -8,3 +8,7 @@ class EmailAlreadyExists(Exception):
 
 class PhoneNumAlreadyExists(Exception):
     pass
+
+
+class DbError(Exception):
+    pass

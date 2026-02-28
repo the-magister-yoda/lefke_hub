@@ -4,7 +4,7 @@ from datetime import datetime
 from app.models import UserRole
 
 
-class UserCreate(Basemodel):
+class UserCreate(BaseModel):
     username: str
     email: str
     phone_number: str
@@ -16,6 +16,9 @@ class UserResponse(BaseModel):
     email: str
     role: UserRole
     created_at: datetime
+
+    class Config:
+        from_attributes = True
 
 
 
