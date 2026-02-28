@@ -1,8 +1,9 @@
 from sqlalchemy.exc import IntegrityError
 
-from app.models import User
+from app.models import User, Status
 from app.core.security import hash_password, verify_password, create_access_token
-from app.errors import UserNotFound, UsernameAlreadyExists, EmailAlreadyExists, PhoneNumAlreadyExists, DbError, WrongPassword
+from app.errors import UserNotFound, UsernameAlreadyExists, UserActive, AlreadyDeleted
+from app.errors import DbError, WrongPassword, EmailAlreadyExists, PhoneNumAlreadyExists
 
 
 def service_register_user(user, db):
@@ -38,13 +39,13 @@ def service_register_user(user, db):
     return db_user
 
 
-def service_login_user(user, db):
-    db_user = db.query(User).filter(User.username == user.username).first()
+def service_login_user(form_data, db):
+    db_user = db.query(User).filter(User.username == form_data.username).first()
 
     if db_user is None:
         raise UserNotFound()
 
-    if not verify_password(user.password, db_user.hashed_password):
+    if not verify_password(form_data.password, db_user.hashed_password):
         raise WrongPassword()
 
     access_token = create_access_token(
@@ -52,5 +53,40 @@ def service_login_user(user, db):
     )
 
     return {"access_token": access_token, "token_type": "bearer"}
+
+
+def service_delete_user(current_user, db):
+    db_user = db.query(User).filter(User.id == current_user.id).first()
+
+    if db_user is None:
+        raise UserNotFound()
+
+    if db_user.status == Status.ARCHIVED:
+        raise AlreadyDeleted()
+
+    db_user.status = Status.ARCHIVED
+
+    db.commit()
+    db.refresh(db_user)
+
+    return db_user
+
+
+def service_restore_user(user, db):
+    db_user = db.query(User).filter(User.username == user.username).first()
+
+    if db_user is None:
+        raise UserNotFound()
+
+    if db_user.status == Status.ACTIVE:
+        raise UserActive()
+
+    db_user.status = Status.ACTIVE
+
+    db.commit()
+    db.refresh(db_user)
+
+    return db_user
+
 
 

@@ -5,7 +5,6 @@ from datetime import datetime, timedelta
 from app.core.setup_token import settings
 
 
-
 # Создаем контекст шифрования
 pwd_context = CryptContext(
     schemes=["bcrypt"],
@@ -13,13 +12,13 @@ pwd_context = CryptContext(
 )
 
 
+# Хэширует обычный пароль
 def hash_password(password: str) -> str:
-    #Хэширует обычный пароль
     return pwd_context.hash(password)
 
 
+# Проверяет совпадение обычного пароля и хэша
 def verify_password(plain_password: str, hashed_password: str) -> bool:
-    #Проверяет совпадение обычного пароля и хэша
     return pwd_context.verify(plain_password, hashed_password)
 
 

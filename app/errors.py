@@ -20,3 +20,11 @@ class DbError(Exception):
 
 class WrongPassword(Exception):
     pass
+
+
+class AlreadyDeleted(Exception):
+    pass
+
+
+class UserActive(Exception):
+    pass
