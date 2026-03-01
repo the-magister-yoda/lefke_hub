@@ -32,7 +32,3 @@ class TokenResponse(BaseModel):
     # Здесь не нужно исп-ть класс config from_attributes = True.
     # Он используется, когда возвращаешь ORM объект.
     # Здесь ты возвращаешь обычный dict.
-
-
-
-

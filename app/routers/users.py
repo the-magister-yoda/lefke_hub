@@ -4,11 +4,11 @@ from sqlalchemy.orm import Session
 from functools import wraps
 
 from app.models import User
-from app.core.dependencies import get_current_user
 from app.database import get_db
-from app.schemas import UserCreate, UserResponse, UserLogin, TokenResponse
-from app.services.user_service import service_register_user, service_login_user, service_delete_user, service_restore_user
 from app.errors import UserNotFound, UsernameAlreadyExists, UserActive, EmailAlreadyExists, PhoneNumAlreadyExists, WrongPassword, AlreadyDeleted, DbError
+from app.services.user_service import service_register_user, service_login_user, service_delete_user, service_restore_user
+from app.schemas.user_schemas import UserCreate, UserResponse, UserLogin, TokenResponse
+from app.core.dependencies import get_current_user
 
 
 router = APIRouter()

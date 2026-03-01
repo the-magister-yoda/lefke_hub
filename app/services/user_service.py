@@ -1,9 +1,9 @@
 from sqlalchemy.exc import IntegrityError
 
 from app.models import User, Status
-from app.core.security import hash_password, verify_password, create_access_token
 from app.errors import UserNotFound, UsernameAlreadyExists, UserActive, AlreadyDeleted
 from app.errors import DbError, WrongPassword, EmailAlreadyExists, PhoneNumAlreadyExists
+from app.core.security import hash_password, verify_password, create_access_token
 
 
 def service_register_user(user, db):
