@@ -1,7 +1,7 @@
 from pydantic import BaseModel
 from decimal import Decimal
 from datetime import datetime
-from typing import Optional
+from typing import List, Optional
 
 from app.models import Status
 
@@ -39,6 +39,22 @@ class AdUpdate(BaseModel):
     description: Optional[str] = None
     price: Optional[Decimal] = None
     category: Optional[str] = None
+
+
+class AdFilterSchema(BaseModel):
+    category: Optional[str] = None
+    min_price: Optional[Decimal] = None
+    max_price: Optional[Decimal] = None
+    search: Optional[str] = None
+    sort_by: Optional[str] = None
+
+
+class AdListResponse(BaseModel):
+    total: int
+    items: List[AdResponse]
+
+    class Config:
+        from_attributes = True
 
 
 

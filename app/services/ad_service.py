@@ -1,7 +1,41 @@
+from sqlalchemy import desc, asc
 from sqlalchemy.exc import IntegrityError
 
 from app.models import Ad, Status
 from app.errors import AdsNotFound, DbError, EmptyRequest
+
+
+def service_get_ads(skip, limit, ad, db):
+    query = db.query(Ad).filter(Ad.status == Status.ACTIVE)
+
+    if ad.category:
+        query = query.filter(Ad.category == ad.category)
+
+    if ad.min_price is not None:  # Так делаем из за того что у нас Decimal
+        query = query.filter(Ad.price >= ad.min_price)
+
+    if ad.max_price is not None:  # Так делаем из за того что у нас Decimal
+        query = query.filter(Ad.price <= ad.max_price)
+
+    if ad.search:
+        query = query.filter(Ad.title.ilike(f"%{ad.search}%"))
+
+    if ad.sort_by == "date_desc":
+        query = query.order_by(desc(Ad.created_at))
+
+    elif ad.sort_by == "date_asc":
+        query = query.order_by(asc(Ad.created_at))
+
+    elif ad.sort_by == "price_desc":
+        query = query.order_by(desc(Ad.price))
+
+    elif ad.sort_by == "price_asc":
+        query = query.order_by(asc(Ad.price))
+
+    total = query.count()
+    items = query.offset(skip).limit(limit).all()
+
+    return {"total": total, "items": items}
 
 
 def service_create_ad(ad, user, db):
@@ -23,7 +57,7 @@ def service_create_ad(ad, user, db):
     return db_add
 
 
-def service_get_ads(user, db):
+def service_get_my_ads(user, db):
     ads = db.query(Ad).filter(
         (Ad.owner_id == user.id) &
         (Ad.status == Status.ACTIVE)
