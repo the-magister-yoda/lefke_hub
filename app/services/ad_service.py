@@ -5,6 +5,25 @@ from app.models import Ad, Status
 from app.errors import AdsNotFound, DbError, EmptyRequest
 
 
+def service_create_ad(ad, user, db):
+    db_add = Ad(
+        title=ad.title, description=ad.description,
+        price=ad.price, category=ad.category,
+        owner_id=user.id
+    )
+    db.add(db_add)
+
+    try:
+        db.commit()
+
+    except IntegrityError:
+        db.rollback()
+        raise DbError()
+
+    db.refresh(db_add)
+    return db_add
+
+
 def service_get_ads(skip, limit, ad, db):
     query = db.query(Ad).filter(Ad.status == Status.ACTIVE)
 
@@ -38,29 +57,42 @@ def service_get_ads(skip, limit, ad, db):
     return {"total": total, "items": items}
 
 
-def service_create_ad(ad, user, db):
-    db_add = Ad(
-        title=ad.title, description=ad.description,
-        price=ad.price, category=ad.category,
-        owner_id=user.id
-    )
-    db.add(db_add)
+def service_get_ad(ad_id, user, db):
+    db_ad = db.query(Ad).filter(
+        (Ad.id == ad_id) &
+        (Ad.status == Status.ACTIVE)
+    ).first()
 
-    try:
-        db.commit()
+    if not db_ad:
+        raise AdsNotFound()
 
-    except IntegrityError:
-        db.rollback()
-        raise DbError()
+    if user and user.id != db_ad.owner_id:
+        db_ad.views += 1
 
-    db.refresh(db_add)
-    return db_add
+    db.commit()
+
+    return db_ad
 
 
 def service_get_my_ads(user, db):
-    ads = db.query(Ad).filter(
+    query = db.query(Ad).filter(
         (Ad.owner_id == user.id) &
         (Ad.status == Status.ACTIVE)
+    )
+
+    query = query.order_by(desc(Ad.created_at))
+    ads = query.all()
+
+    if not ads:
+        raise AdsNotFound()
+
+    return ads
+
+
+def service_get_my_archived_ads(user, db):
+    ads = db.query(Ad).filter(
+        (Ad.owner_id == user.id) &
+        (Ad.status == Status.ARCHIVED)
     ).all()
 
     if not ads:
@@ -107,7 +139,7 @@ def service_delete_ad(ad_id, user, db):
         (Ad.status == Status.ACTIVE)
     ).first()
 
-    if db_ad is None:
+    if not db_ad:
         raise AdsNotFound()
 
     db_ad.status = Status.ARCHIVED

@@ -9,6 +9,7 @@ from app.core.security import decode_token
 
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/users/login")
+oauth2_scheme_optional = OAuth2PasswordBearer(auto_error=False, tokenUrl="/users/login")
 
 
 def get_current_user(
@@ -37,3 +38,21 @@ def get_current_user(
         raise credentials_exception
 
     return user
+
+
+def get_possible_user(token: str = Depends(oauth2_scheme_optional), db: Session = Depends(get_db)):
+
+    if not token:
+        return None
+
+    try:
+        payload = decode_token(token)
+        user_id: int = payload.get("sub")
+
+    except JWTError:
+        return None
+
+    user = db.query(User).filter(User.id == int(user_id)).first()
+
+    return user
+

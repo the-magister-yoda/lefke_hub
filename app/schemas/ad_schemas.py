@@ -17,6 +17,7 @@ class AdResponse(BaseModel):
     title: str
     price: Decimal
     created_at: datetime
+    views: int
 
     class Config:
         from_attributes = True
@@ -29,6 +30,7 @@ class AdFullResponse(BaseModel):
     category: str
     created_at: datetime
     status: Status
+    views: int
 
     class Config:
         from_attributes = True

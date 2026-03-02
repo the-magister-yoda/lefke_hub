@@ -45,6 +45,7 @@ class Ad(Base):
 
     created_at = Column(DateTime, default=func.now())
     status = Column(Enum(Status), nullable=False, default=Status.ACTIVE)
+    views = Column(Integer, default=0)
 
     user = relationship("User", back_populates="ads")
 
