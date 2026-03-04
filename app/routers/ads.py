@@ -45,16 +45,10 @@ def get_ads(skip: int = 0, limit: int = 10, ad: AdFilterSchema = Depends(), db: 
     return service_get_ads(skip, limit, ad, db)
 
 
-@router.get("/{ad_id}", response_model=AdFullResponse)
-@handle_ads_errors
-def get_ad(ad_id: int, user: Optional[User] = Depends(get_possible_use), db: Session = Depends(get_db)):
-    return service_get_ad(ad_id, user, db)
-
-
 @router.get("/my", response_model=List[AdFullResponse])
 @handle_ads_errors
-def get_my_ads(user = Depends(get_current_user), db: Session = Depends(get_db)):
-    return service_get_my_ads(user, db)
+def get_my_ads(current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    return service_get_my_ads(current_user, db)
 
 
 @router.get("/my/archived", response_model=List[AdFullResponse])
@@ -63,15 +57,23 @@ def get_my_archived_ads(user = Depends(get_current_user), db: Session = Depends(
     return service_get_my_archived_ads(user, db)
 
 
-@router.patch("/update/{ad_id}", response_model=AdFullResponse)
+@router.get("/{ad_id}", response_model=AdFullResponse)
+@handle_ads_errors
+def get_ad(ad_id: int, user: Optional[User] = Depends(get_possible_user), db: Session = Depends(get_db)):
+    return service_get_ad(ad_id, user, db)
+
+
+@router.patch("/{ad_id}", response_model=AdFullResponse)
 @handle_ads_errors
 def update_ad(ad_id: int, ad: AdUpdate, user = Depends(get_current_user), db: Session = Depends(get_db)):
     return service_update_ad(ad_id, ad, user, db)
 
 
-@router.delete("/delete/{ad_id}", response_model=AdFullResponse)
+@router.delete("/{ad_id}", response_model=AdFullResponse)
 @handle_ads_errors
 def delete_ad(ad_id: int, user = Depends(get_current_user), db: Session = Depends(get_db)):
     return service_delete_ad(ad_id, user, db)
+
+
 
 

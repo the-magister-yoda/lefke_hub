@@ -27,6 +27,10 @@ class UserActive(Exception):
     pass
 
 
+class NotRights(Exception):
+    pass
+
+
 # Common Errors
 class DbError(Exception):
     pass

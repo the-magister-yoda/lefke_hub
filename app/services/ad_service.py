@@ -51,6 +51,12 @@ def service_get_ads(skip, limit, ad, db):
     elif ad.sort_by == "price_asc":
         query = query.order_by(asc(Ad.price))
 
+    elif ad.sort_by == 'views_desc':
+        query = query.order_by(desc(Ad.views))
+
+    elif ad.sort_by == 'views_asc':
+        query = query.order_by(asc(Ad.views))
+
     total = query.count()
     items = query.offset(skip).limit(limit).all()
 
@@ -74,9 +80,9 @@ def service_get_ad(ad_id, user, db):
     return db_ad
 
 
-def service_get_my_ads(user, db):
+def service_get_my_ads(current_user, db):
     query = db.query(Ad).filter(
-        (Ad.owner_id == user.id) &
+        (Ad.owner_id == current_user.id) &
         (Ad.status == Status.ACTIVE)
     )
 

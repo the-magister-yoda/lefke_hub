@@ -1,7 +1,8 @@
+from sqlalchemy import desc, asc
 from sqlalchemy.exc import IntegrityError
 
-from app.models import User, Status
-from app.errors import UserNotFound, UsernameAlreadyExists, UserActive, AlreadyDeleted
+from app.models import User, Status, UserRole
+from app.errors import UserNotFound, UsernameAlreadyExists, UserActive, AlreadyDeleted, NotRights
 from app.errors import DbError, WrongPassword, EmailAlreadyExists, PhoneNumAlreadyExists
 from app.core.security import hash_password, verify_password, create_access_token
 
@@ -55,11 +56,14 @@ def service_login_user(form_data, db):
     return {"access_token": access_token, "token_type": "bearer"}
 
 
-def service_delete_user(current_user, db):
-    db_user = db.query(User).filter(User.id == current_user.id).first()
+def service_delete_user(user_id, current_user, db):
+    db_user = db.query(User).filter(User.id == user_id).first()
 
     if db_user is None:
         raise UserNotFound()
+
+    if db_user.id != current_user.id or db_user.role != UserRole.ADMIN:
+        raise NotRights()
 
     if db_user.status == Status.ARCHIVED:
         raise AlreadyDeleted()
@@ -87,6 +91,44 @@ def service_restore_user(user, db):
     db.refresh(db_user)
 
     return db_user
+
+
+def service_get_me(current_user, db):
+    db_user = db.query(User).filter(User.id == current_user.id).first()
+
+    if not db_user:
+        raise UserNotFound()
+
+    return db_user
+
+
+def service_get_all_users(skip, limit, user, user_filter, db):
+    if user.role != UserRole.ADMIN:
+        raise NotRights()
+
+    query = db.query(User)
+
+    if user_filter.only_active:
+        query = query.filter(User.status == Status.ACTIVE)
+
+    if user_filter.search:
+        query = query.filter(User.username.ilike(f"%{user_filter.search}%"))
+
+    if user_filter.sort_by == 'date_desc':
+        query = query.order_by(desc(User.created_at))
+
+    elif user_filter.sort_by == 'date_asc':
+        query = query.order_by(asc(User.created_at))
+
+    total = query.count()
+
+    if total == 0:
+        raise UserNotFound()
+
+    items = query.offset(skip).limit(limit).all()
+
+    return {"total": total, "items": items}
+
 
 
 
