@@ -6,6 +6,7 @@ from app.routers import users, ads
 
 
 app = FastAPI()
+Base.metadata.create_all(bind=engine)
 
 app.include_router(users.router, prefix='/users')
 app.include_router(ads.router, prefix='/ads')

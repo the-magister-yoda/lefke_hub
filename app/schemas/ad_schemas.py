@@ -9,7 +9,7 @@ from app.models import Status
 class AdCreate(BaseModel):
     title: str
     description: str
-    price: str
+    price: Decimal
     category: str
 
 

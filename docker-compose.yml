@@ -1,0 +1,25 @@
+services:
+
+  db:
+    image: postgres:15
+    container_name: lefke_db
+    environment:
+      POSTGRES_USER: myuser
+      POSTGRES_PASSWORD: 1234
+      POSTGRES_DB: lefke_hub
+    ports:
+      - "5432:5432"
+
+  backend:
+    build: .
+    container_name: lefke_backend
+    depends_on:
+      - db
+    environment:
+      POSTGRES_USER: myuser
+      POSTGRES_PASSWORD: 1234
+      POSTGRES_DB: lefke_hub
+      POSTGRES_HOST: db
+      POSTGRES_PORT: 5432
+    ports:
+      - "8000:8000"

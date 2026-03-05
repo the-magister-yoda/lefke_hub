@@ -62,7 +62,7 @@ def service_delete_user(user_id, current_user, db):
     if db_user is None:
         raise UserNotFound()
 
-    if db_user.id != current_user.id or db_user.role != UserRole.ADMIN:
+    if db_user.id != current_user.id and db_user.role != UserRole.ADMIN:
         raise NotRights()
 
     if db_user.status == Status.ARCHIVED:
