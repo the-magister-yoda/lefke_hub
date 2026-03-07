@@ -12,6 +12,12 @@ class UserCreate(BaseModel):
     password: str
 
 
+class UserUpdate(BaseModel):
+    email: Optional[str] = None
+    phone_number: Optional[str] = None
+    password: Optional[str] = None
+    
+
 class UserResponse(BaseModel):
     username: str
     email: str

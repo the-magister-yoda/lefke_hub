@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session, sessionmaker, declarative_base
 
 DATABASE_URL = "postgresql+psycopg2://myuser:1234@db:5432/lefke_hub"
 
+
 engine = create_engine(DATABASE_URL)
 
 

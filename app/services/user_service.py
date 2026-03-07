@@ -3,7 +3,7 @@ from sqlalchemy.exc import IntegrityError
 
 from app.models import User, Status, UserRole
 from app.errors import UserNotFound, UsernameAlreadyExists, UserActive, AlreadyDeleted, NotRights
-from app.errors import DbError, WrongPassword, EmailAlreadyExists, PhoneNumAlreadyExists
+from app.errors import DbError, WrongPassword, EmailAlreadyExists, PhoneNumAlreadyExists, EmptyRequest
 from app.core.security import hash_password, verify_password, create_access_token
 
 
@@ -54,6 +54,52 @@ def service_login_user(form_data, db):
     )
 
     return {"access_token": access_token, "token_type": "bearer"}
+
+
+def service_get_user(user_id, db):
+    db_user = db.query(User).filter(User.id == user_id).first()
+
+    if not db_user:
+        raise UserNotFound()
+
+    return db_user
+
+
+def service_update_user(user_data, current_user, db):
+    db_user = db.query(User).filter(User.id == current_user.id).first()
+
+    if not db_user:
+        raise UserNotFound()
+
+    if user_data.email:
+        user = db.query(User).filter(User.email == user_data.email).first()
+
+        if user:
+            raise EmailAlreadyExists()
+
+        else:
+            db_user.email = user_data.email
+
+    if user_data.phone_number:
+        user = db.query(User).filter(User.phone_number == user_data.phone_number).first()
+
+        if user:
+            raise PhoneNumAlreadyExists()
+
+        else:
+            db_user.phone_number = user_data.phone_number
+
+    if user_data.password:
+        hashed_password = hash_password(user_data.password)
+        db_user.hashed_password = hashed_password
+
+    if user_data.email is None and user_data.phone_number is None and user_data.password is None:
+        raise EmptyRequest()
+
+    db.commit()
+    db.refresh(db_user)
+
+    return db_user
 
 
 def service_delete_user(user_id, current_user, db):
