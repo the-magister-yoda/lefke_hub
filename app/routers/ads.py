@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException, Depends, UploadFile, File
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from functools import wraps
@@ -9,7 +9,8 @@ from app.database import get_db
 from app.errors import AdsNotFound, DbError, EmptyRequest
 from app.core.dependencies import get_current_user, get_possible_user
 from app.schemas.ad_schemas import AdCreate, AdResponse, AdFullResponse, AdUpdate, AdFilterSchema, AdListResponse
-from app.services.ad_service import service_create_ad, service_get_ads, service_get_ad, service_get_my_ads, service_get_my_archived_ads, service_update_ad, service_delete_ad
+from app.services.ad_service import service_create_ad, service_update_ad, service_delete_ad, service_upload_image
+from app.services.ad_service import service_get_ads, service_get_ad, service_get_my_ads, service_get_my_archived_ads
 
 
 router = APIRouter()
@@ -75,5 +76,7 @@ def delete_ad(ad_id: int, user = Depends(get_current_user), db: Session = Depend
     return service_delete_ad(ad_id, user, db)
 
 
-
-
+@router.post("/{ad_id}/upload_image")
+@handle_ads_errors
+def upload_image(ad_id: int, file: UploadFile = File(...), user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    return service_upload_image(ad_id, file, user, db)

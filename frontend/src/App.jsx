@@ -1,21 +1,27 @@
-import { useEffect, useState } from "react"
+import { BrowserRouter, Routes, Route } from "react-router-dom"
+import Navbar from "./components/Navbar"
+import Home from "./pages/Home"
+import Login from "./pages/Login"
+import Register from "./pages/Register"
+import CreateAd from "./pages/CreateAd"
+import AdPage from "./pages/AdPage"
+import MyProfile from "./pages/MyProfile"
+import UploadImage from "./pages/UploadImage"
 
 function App() {
-
-  const [data, setData] = useState(null)
-
-  useEffect(() => {
-    fetch("http://localhost:8000/ads")
-      .then(response => response.json())
-      .then(data => setData(data))
-  }, [])
-
   return (
-    <div>
-      <h1>Frontend работает</h1>
-      <h2>Ответ от FastAPI:</h2>
-      <pre>{JSON.stringify(data, null, 2)}</pre>
-    </div>
+    <BrowserRouter>
+      <Navbar />
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
+        <Route path="/create" element={<CreateAd />} />
+        <Route path="/ad/:id" element={<AdPage />} />
+        <Route path="/ad/:id/upload_image" element={<UploadImage />} />
+        <Route path="/myprofile" element={<MyProfile />} />
+      </Routes>
+    </BrowserRouter>
   )
 }
 

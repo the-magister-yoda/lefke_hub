@@ -6,8 +6,10 @@ from typing import List
 
 from app.models import User
 from app.database import get_db
-from app.errors import UserNotFound, UsernameAlreadyExists, UserActive, EmailAlreadyExists, PhoneNumAlreadyExists, WrongPassword, AlreadyDeleted, NotRights, DbError, EmptyRequest
-from app.services.user_service import service_register_user, service_login_user, service_get_user, service_update_user, service_delete_user, service_restore_user, service_get_me, service_get_all_users
+from app.errors import UserNotFound, UsernameAlreadyExists, UserActive, EmailAlreadyExists, PhoneNumAlreadyExists
+from app.errors import WrongPassword, AlreadyDeleted, NotRights, DbError, EmptyRequest
+from app.services.user_service import service_register_user, service_login_user, service_update_user, service_delete_user, service_restore_user
+from app.services.user_service import service_get_user, service_get_me, service_get_all_users
 from app.schemas.user_schemas import UserCreate, UserResponse, UserLogin, UserUpdate, TokenResponse, UserListResponse, UserFullResponse, UserFilterSchema
 from app.core.dependencies import get_current_user
 
@@ -66,16 +68,16 @@ def login_user(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = D
     return service_login_user(form_data, db)
 
 
-@router.get("/{user_id}", response_model=UserFullResponse)
-@handle_user_errors
-def get_user(user_id: int, db: Session = Depends(get_db)):
-    return service_get_user(user_id, db)
-
-
 @router.get("/me", response_model=UserFullResponse)
 @handle_user_errors
 def get_me(current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     return service_get_me(current_user, db)
+
+
+@router.get("/{user_id}", response_model=UserFullResponse)
+@handle_user_errors
+def get_user(user_id: int, db: Session = Depends(get_db)):
+    return service_get_user(user_id, db)
 
 
 @router.patch("/{user_id}", response_model=UserFullResponse)
@@ -101,4 +103,3 @@ def restore_user(user: UserLogin, db: Session = Depends(get_db)):
 @handle_user_errors
 def get_all_users(skip: int = 0, limit: int = 10, user: User = Depends(get_current_user), user_filter: UserFilterSchema = Depends(), db: Session = Depends(get_db)):
     return service_get_all_users(skip, limit, user, user_filter, db)
-

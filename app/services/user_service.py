@@ -175,6 +175,3 @@ def service_get_all_users(skip, limit, user, user_filter, db):
 
     return {"total": total, "items": items}
 
-
-
-

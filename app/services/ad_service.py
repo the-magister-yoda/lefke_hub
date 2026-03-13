@@ -1,16 +1,24 @@
+import os
+
+from uuid import  uuid4
 from sqlalchemy import desc, asc
 from sqlalchemy.exc import IntegrityError
 
-from app.models import Ad, Status
+from app.models import Ad, AdImage, Status
 from app.errors import AdsNotFound, DbError, EmptyRequest
+
+
+BASE_URL = "http://127.0.0.1:8000"
+UPLOAD_DIR = "uploads/ads"
 
 
 def service_create_ad(ad, user, db):
     db_add = Ad(
         title=ad.title, description=ad.description,
-        price=ad.price, category=ad.category,
+        price=ad.price, category_id=ad.category_id,
         owner_id=user.id
     )
+
     db.add(db_add)
 
     try:
@@ -27,8 +35,8 @@ def service_create_ad(ad, user, db):
 def service_get_ads(skip, limit, ad, db):
     query = db.query(Ad).filter(Ad.status == Status.ACTIVE)
 
-    if ad.category:
-        query = query.filter(Ad.category == ad.category)
+    # Нужно поменять if ad.category_id:
+    #     query = query.filter(Ad.category_id == ad.category_id)
 
     if ad.min_price is not None:  # Так делаем из за того что у нас Decimal
         query = query.filter(Ad.price >= ad.min_price)
@@ -117,7 +125,7 @@ def service_update_ad(ad_id, ad, user, db):
     if not db_ad:
         raise AdsNotFound()
 
-    if ad.title is None and ad.description is None and ad.price is None and ad.category is None:
+    if ad.title is None and ad.description is None and ad.price is None and ad.category_id is None:
         raise EmptyRequest()
 
     if ad.title is not None:
@@ -129,8 +137,8 @@ def service_update_ad(ad_id, ad, user, db):
     if ad.price is not None:
         db_ad.price = ad.price
 
-    if ad.category is not None:
-        db_ad.category = ad.category
+    if ad.category_id is not None:
+        db_ad.category_id = ad.category_id
 
     db.commit()
     db.refresh(db_ad)
@@ -154,3 +162,38 @@ def service_delete_ad(ad_id, user, db):
     db.refresh(db_ad)
 
     return db_ad
+
+
+def service_upload_image(ad_id, file, user, db):
+    db_ad = db.query(Ad).filter(
+        (Ad.id == ad_id) &
+        (Ad.owner_id == user.id)
+    ).first()
+
+    if not db_ad:
+        raise AdsNotFound()
+
+    # создаём папку
+    os.makedirs(f"{UPLOAD_DIR}/{ad_id}", exist_ok=True)
+
+    # генерируем имя файла
+    filename = f"{uuid4()}.jpg"
+
+    # путь на сервере
+    filepath = f"{UPLOAD_DIR}/{ad_id}/{filename}"
+
+    # сохраняем файл
+    with open(filepath, "wb") as fd:
+        fd.write(file.file.read())
+
+    image = AdImage(
+        ad_id=ad_id,
+        url=filepath
+    )
+
+    db.add(image)
+    db.commit()
+
+    return {"url": filepath}
+
+

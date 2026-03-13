@@ -8,8 +8,8 @@ from app.models import User
 from app.core.security import decode_token
 
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/users/login")
-oauth2_scheme_optional = OAuth2PasswordBearer(auto_error=False, tokenUrl="/users/login")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/user/login")
+oauth2_scheme_optional = OAuth2PasswordBearer(auto_error=False, tokenUrl="/user/login")
 
 
 def get_current_user(

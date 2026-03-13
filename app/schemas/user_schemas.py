@@ -12,12 +12,6 @@ class UserCreate(BaseModel):
     password: str
 
 
-class UserUpdate(BaseModel):
-    email: Optional[str] = None
-    phone_number: Optional[str] = None
-    password: Optional[str] = None
-    
-
 class UserResponse(BaseModel):
     username: str
     email: str
@@ -46,6 +40,12 @@ class UserLogin(BaseModel):
     password: str
 
 
+class UserUpdate(BaseModel):
+    email: Optional[str] = None
+    phone_number: Optional[str] = None
+    password: Optional[str] = None
+    
+
 class UserListResponse(BaseModel):
     total: int
     items: List[UserResponse]
@@ -58,8 +58,6 @@ class UserFilterSchema(BaseModel):
     only_active: Optional[str] = None
     search: Optional[str] = None
     sort_by: Optional[str] = None
-
-
 
 
 class TokenResponse(BaseModel):

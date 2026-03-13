@@ -43,3 +43,9 @@ class EmptyRequest(Exception):
 # Ads Errors
 class AdsNotFound(Exception):
     pass
+
+
+# Categories Errors
+class CategoryNotFound(Exception):
+    pass
+
