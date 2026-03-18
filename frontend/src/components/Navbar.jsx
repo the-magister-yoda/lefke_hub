@@ -9,7 +9,10 @@ function Navbar() {
   useEffect(() => {
     const token = localStorage.getItem("token")
     if (token) {
-      api.get("/user/me").then(res => setUser(res.data)).catch(() => setUser(null))
+      api
+        .get("/user/me")
+        .then(res => setUser(res.data))
+        .catch(() => setUser(null))
     }
   }, [])
 
@@ -19,25 +22,46 @@ function Navbar() {
     navigate("/")
   }
 
-  return (
-    <div className="bg-white shadow">
-      <div className="max-w-7xl mx-auto flex justify-between items-center p-4">
-        <Link to="/" className="text-2xl font-bold text-blue-600">LefkeHub</Link>
-        <div className="flex gap-4 items-center">
-          <Link to="/" className="text-gray-700 hover:text-blue-600">Home</Link>
-          <Link to="/create" className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Post Ad</Link>
+  const handleProfileClick = () => {
+    if (user) {
+      navigate("/myprofile")
+    } else {
+      navigate("/login")
+    }
+  }
 
-          {user ? (
-            <>
-              <Link to="/myprofile" className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">MyProfile</Link>
-              <button onClick={logout} className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600">Logout</button>
-            </>
-          ) : (
-            <>
-              <Link to="/login" className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Login</Link>
-              <Link to="/register" className="bg-gray-200 text-gray-800 px-4 py-2 rounded hover:bg-gray-300">Register</Link>
-            </>
-          )}
+  return (
+    <div className="bg-emerald-950 text-white sticky top-0 z-40 shadow-md rounded-xl">
+      <div className="max-w-7xl mx-auto px-6 flex justify-between items-center h-20">
+
+        {/* ЛОГО */}
+        <Link
+          to="/"
+          className="text-2xl font-extrabold text-white no-underline"
+        >
+          LefkeHub
+        </Link>
+
+        {/* ПРАВАЯ ЧАСТЬ */}
+        <div className="flex items-center gap-6">
+
+          {/* Your Profile */}
+          <span
+            onClick={handleProfileClick}
+            className="text-1xl font-extrabold text-white hover:text-white cursor-pointer transition"
+          >
+            👤 Your Profile
+          </span>
+
+          {/* Post Ad */}
+          <Link
+            to="/create"
+            className="text-1xl bg-white text-emerald-950 px-5 py-2 rounded-lg font-medium hover:bg-gray-200 transition no-underline"
+          >
+            Post an ad
+          </Link>
+
+
         </div>
       </div>
     </div>

@@ -50,6 +50,7 @@ class Ad(Base):
     title = Column(String, nullable=False)
     description = Column(String, nullable=False)
     price = Column(Numeric(7, 2), nullable=False)
+    main_image = Column(String, nullable=True)
 
     category_id = Column(Integer, ForeignKey("categories.id"), nullable=False)
 
@@ -60,7 +61,7 @@ class Ad(Base):
     views = Column(Integer, default=0)
 
     user = relationship("User", back_populates="ads")
-    images = relationship("AdImage", back_populates="ad", cascade="all, delete-orphan")
+    images = relationship("AdImage", back_populates="ad", cascade="all, delete")
     category = relationship("Category", back_populates="ads")
 
 
@@ -72,6 +73,8 @@ class AdImage(Base):
     ad_id = Column(Integer, ForeignKey("ads.id"), nullable=False)
 
     url = Column(String, nullable=False)
+
+    order = Column(Integer, nullable=True, index=True)
 
     ad = relationship("Ad", back_populates="images")
 

@@ -1,48 +1,77 @@
-import { useParams, Link } from "react-router-dom";
 import { useEffect, useState } from "react";
+import { useParams } from "react-router-dom";
 import { api } from "../api/api";
 
 function AdPage() {
   const { id } = useParams();
   const [ad, setAd] = useState(null);
+  const [current, setCurrent] = useState(0);
 
   useEffect(() => {
     api.get(`/ad/${id}`).then(res => setAd(res.data));
   }, [id]);
 
-  if (!ad) return <div className="p-10">Loading...</div>;
+  if (!ad) return <div>Loading...</div>;
+
+  const next = () => {
+    setCurrent((prev) => (prev + 1) % ad.images.length);
+  };
+
+  const prev = () => {
+    setCurrent((prev) =>
+      prev === 0 ? ad.images.length - 1 : prev - 1
+    );
+  };
 
   return (
-    <div className="max-w-4xl mx-auto p-6 bg-gray-100 min-h-screen">
-      <Link to="/" className="text-blue-600 hover:underline mb-4 inline-block">
-        ← Back to Home
-      </Link>
+    <div className="max-w-6xl mx-auto p-6">
 
-      {/* Слайдер картинок */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-        {ad.images?.length > 0 ? (
-          ad.images.map((img, idx) => (
+      <div className="flex gap-8">
+
+        {/* ФОТО */}
+        <div className="w-2/3">
+
+          <div className="relative bg-gray-100 h-[500px] flex items-center justify-center">
             <img
-              key={idx}
-              src={`http://localhost:8000/${img.url.replace(/^\/+/, "")}`}
-              alt={`ad-image-${idx}`}
-              className="w-full h-75 bg-gray-95 flex items-center justify-center"
+              src={`http://localhost:8000/${ad.images[current]?.url}`}
+              className="max-h-full object-contain"
             />
-          ))
-        ) : (
-          <img
-            src="https://picsum.photos/600/400"
-            alt="placeholder"
-            className="w-full h-64 object-cover rounded"
-          />
-        )}
+
+            {ad.images.length > 1 && (
+              <>
+                <button onClick={prev} className="absolute left-2">◀</button>
+                <button onClick={next} className="absolute right-2">▶</button>
+              </>
+            )}
+          </div>
+
+        </div>
+
+        {/* ПРАВО */}
+        <div className="w-1/3 flex flex-col gap-2">
+
+          <p className="text-sm text-gray-400">
+            {new Date(ad.created_at).toLocaleDateString()}
+          </p>
+
+          <h1 className="text-xl font-semibold">
+            {ad.title}
+          </h1>
+
+          <p className="text-2xl font-bold">
+            {ad.price}$
+          </p>
+
+        </div>
+
       </div>
 
-      <h1 className="text-3xl font-bold mb-2">{ad.title}</h1>
-      <p className="text-green-600 text-2xl font-semibold mb-2">{ad.price}$</p>
-      <p className="text-gray-500 mb-2">Category: {ad.category?.name}</p>
-      <p className="text-gray-400 mb-4">{ad.views} views</p>
-      <p className="text-gray-700">{ad.description}</p>
+      {/* DESCRIPTION */}
+      <div className="mt-6">
+        <h2 className="font-semibold mb-2">Description</h2>
+        <p>{ad.description}</p>
+      </div>
+
     </div>
   );
 }

@@ -11,7 +11,7 @@ class AdCreate(BaseModel):
     title: str
     description: str
     price: Decimal
-    category_id: int
+    category_slug: str
 
 
 class AdImageResponse(BaseModel):
@@ -26,14 +26,12 @@ class AdResponse(BaseModel):
     title: str
     price: Decimal
     category: CategoryResponse
-    images: List[AdImageResponse]
+    main_image: str
     created_at: datetime
     views: int
 
     class Config:
         from_attributes = True
-
-
 
 
 class AdFullResponse(BaseModel):

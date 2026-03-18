@@ -4,39 +4,75 @@ from uuid import  uuid4
 from sqlalchemy import desc, asc
 from sqlalchemy.exc import IntegrityError
 
-from app.models import Ad, AdImage, Status
-from app.errors import AdsNotFound, DbError, EmptyRequest
+from app.models import Ad, AdImage, Status, Category
+from app.errors import AdsNotFound, DbError, EmptyRequest, CategoryNotFound
 
 
-BASE_URL = "http://127.0.0.1:8000"
 UPLOAD_DIR = "uploads/ads"
 
 
-def service_create_ad(ad, user, db):
+def service_create_ad(ad, images, user, db):
+    db_category = db.query(Category).filter(Category.slug == ad.category_slug).first()
+
+    if not db_category:
+        raise CategoryNotFound()
+    
     db_add = Ad(
         title=ad.title, description=ad.description,
-        price=ad.price, category_id=ad.category_id,
+        price=ad.price, category_id=db_category.id,
         owner_id=user.id
     )
 
     db.add(db_add)
-
     try:
         db.commit()
-
+    
     except IntegrityError:
         db.rollback()
         raise DbError()
 
     db.refresh(db_add)
+
+    if images:
+
+        os.makedirs(f"{UPLOAD_DIR}/{db_add.id}", exist_ok=True)
+
+        order = 1
+
+        for file in images:
+            
+            # Распарсивает любой формат файла чтобы не добавлять только jpg.
+            ext = file.filename.split(".")[-1]
+            filename = f"{uuid4()}.{ext}"
+            filepath = f"{UPLOAD_DIR}/{db_add.id}/{filename}"
+
+            # сохраняем файл
+            with open(filepath, "wb") as fd:
+                fd.write(file.file.read())
+
+            db_image = AdImage(
+                ad_id=db_add.id,
+                url=filepath,
+                order=order
+            )
+
+            db.add(db_image)
+
+            if order == 1:
+                db_add.main_image = filepath
+
+            order += 1
+
+        db.commit()
+
     return db_add
 
 
 def service_get_ads(skip, limit, ad, db):
     query = db.query(Ad).filter(Ad.status == Status.ACTIVE)
 
-    # Нужно поменять if ad.category_id:
-    #     query = query.filter(Ad.category_id == ad.category_id)
+    if ad.category:
+        query = query.join(Category).filter(Category.slug == ad.category)
 
     if ad.min_price is not None:  # Так делаем из за того что у нас Decimal
         query = query.filter(Ad.price >= ad.min_price)

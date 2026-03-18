@@ -1,8 +1,9 @@
-from fastapi import APIRouter, HTTPException, Depends, UploadFile, File
+from fastapi import APIRouter, HTTPException, Depends, UploadFile, File, Form
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from functools import wraps
 from typing import List, Optional
+from decimal import Decimal
 
 from app.models import Ad, User
 from app.database import get_db
@@ -25,6 +26,9 @@ def handle_ads_errors(func):
         except AdsNotFound:
             raise HTTPException(status_code=404, detail='There no ad(s) currently please add one to watch.')
 
+        except CategoryNotFound:
+            raise HTTPExceptionT(status=400, detail='Please enter valid category name.')
+
         except EmptyRequest:
             raise HTTPException(status_code=404, detail="Empty request please put some data in.")
 
@@ -34,10 +38,26 @@ def handle_ads_errors(func):
     return wrapper
 
 
-@router.post("/create", response_model=AdResponse)
+@router.post("/create")
 @handle_ads_errors
-def create_ad(ad: AdCreate, user = Depends(get_current_user), db: Session = Depends(get_db)):
-    return service_create_ad(ad, user, db)
+def create_ad(
+    title: str = Form(...),
+    description: str = Form(...),
+    price: Decimal = Form(...),
+    category_slug: str = Form(...),
+    images: List[UploadFile] = File(None),
+    user = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+
+    ad = AdCreate(
+        title=title,
+        description=description,
+        price=price,
+        category_slug=category_slug
+    )
+
+    return service_create_ad(ad, images, user, db)
 
 
 @router.get("/", response_model=AdListResponse)
