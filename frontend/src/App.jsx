@@ -7,6 +7,8 @@ import CreateAd from "./pages/CreateAd"
 import AdPage from "./pages/AdPage"
 import MyProfile from "./pages/MyProfile"
 import UploadImage from "./pages/UploadImage"
+import SettingPage from "./pages/SettingPage"
+
 
 function App() {
   return (
@@ -20,6 +22,7 @@ function App() {
         <Route path="/ad/:id" element={<AdPage />} />
         <Route path="/ad/:id/upload_image" element={<UploadImage />} />
         <Route path="/myprofile" element={<MyProfile />} />
+        <Route path="/setting" element={<SettingPage />} />
       </Routes>
     </BrowserRouter>
   )

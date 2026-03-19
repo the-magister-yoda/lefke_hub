@@ -3,6 +3,7 @@ from decimal import Decimal
 from datetime import datetime
 from typing import List, Optional
 
+from app.schemas.user_schemas import UserFullResponse
 from app.schemas.category_schemas import CategoryResponse
 from app.models import Status, Ad
 
@@ -41,6 +42,7 @@ class AdFullResponse(BaseModel):
     price: Decimal
     category: CategoryResponse
     images: List[AdImageResponse]
+    user: UserFullResponse
     views: int
     status: Status
     created_at: datetime

@@ -16,7 +16,7 @@ function Login() {
 
       const res = await api.post("/user/login", form)
       localStorage.setItem("token", res.data.access_token)
-      navigate("/")  // redirect after login
+      window.location.href = "/myprofile"
     } catch (err) {
       alert("Login failed")
     }

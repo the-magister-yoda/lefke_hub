@@ -2,6 +2,7 @@ import os
 
 from uuid import  uuid4
 from sqlalchemy import desc, asc
+from sqlalchemy.orm import joinedload
 from sqlalchemy.exc import IntegrityError
 
 from app.models import Ad, AdImage, Status, Category
@@ -108,7 +109,7 @@ def service_get_ads(skip, limit, ad, db):
 
 
 def service_get_ad(ad_id, user, db):
-    db_ad = db.query(Ad).filter(
+    db_ad = db.query(Ad).options(joinedload(Ad.user)).filter(
         (Ad.id == ad_id) &
         (Ad.status == Status.ACTIVE)
     ).first()
@@ -198,38 +199,3 @@ def service_delete_ad(ad_id, user, db):
     db.refresh(db_ad)
 
     return db_ad
-
-
-def service_upload_image(ad_id, file, user, db):
-    db_ad = db.query(Ad).filter(
-        (Ad.id == ad_id) &
-        (Ad.owner_id == user.id)
-    ).first()
-
-    if not db_ad:
-        raise AdsNotFound()
-
-    # создаём папку
-    os.makedirs(f"{UPLOAD_DIR}/{ad_id}", exist_ok=True)
-
-    # генерируем имя файла
-    filename = f"{uuid4()}.jpg"
-
-    # путь на сервере
-    filepath = f"{UPLOAD_DIR}/{ad_id}/{filename}"
-
-    # сохраняем файл
-    with open(filepath, "wb") as fd:
-        fd.write(file.file.read())
-
-    image = AdImage(
-        ad_id=ad_id,
-        url=filepath
-    )
-
-    db.add(image)
-    db.commit()
-
-    return {"url": filepath}
-
-

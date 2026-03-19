@@ -10,7 +10,7 @@ from app.database import get_db
 from app.errors import AdsNotFound, DbError, EmptyRequest
 from app.core.dependencies import get_current_user, get_possible_user
 from app.schemas.ad_schemas import AdCreate, AdResponse, AdFullResponse, AdUpdate, AdFilterSchema, AdListResponse
-from app.services.ad_service import service_create_ad, service_update_ad, service_delete_ad, service_upload_image
+from app.services.ad_service import service_create_ad, service_update_ad, service_delete_ad
 from app.services.ad_service import service_get_ads, service_get_ad, service_get_my_ads, service_get_my_archived_ads
 
 
@@ -66,13 +66,13 @@ def get_ads(skip: int = 0, limit: int = 10, ad: AdFilterSchema = Depends(), db: 
     return service_get_ads(skip, limit, ad, db)
 
 
-@router.get("/my", response_model=List[AdFullResponse])
+@router.get("/my", response_model=List[AdResponse])
 @handle_ads_errors
 def get_my_ads(current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     return service_get_my_ads(current_user, db)
 
 
-@router.get("/my/archived", response_model=List[AdFullResponse])
+@router.get("/my/archived", response_model=List[AdResponse])
 @handle_ads_errors
 def get_my_archived_ads(user = Depends(get_current_user), db: Session = Depends(get_db)):
     return service_get_my_archived_ads(user, db)
@@ -94,9 +94,3 @@ def update_ad(ad_id: int, ad: AdUpdate, user = Depends(get_current_user), db: Se
 @handle_ads_errors
 def delete_ad(ad_id: int, user = Depends(get_current_user), db: Session = Depends(get_db)):
     return service_delete_ad(ad_id, user, db)
-
-
-@router.post("/{ad_id}/upload_image")
-@handle_ads_errors
-def upload_image(ad_id: int, file: UploadFile = File(...), user: User = Depends(get_current_user), db: Session = Depends(get_db)):
-    return service_upload_image(ad_id, file, user, db)
