@@ -7,7 +7,7 @@ from decimal import Decimal
 
 from app.models import Ad, User
 from app.database import get_db
-from app.errors import AdsNotFound, DbError, EmptyRequest
+from app.errors import AdsNotFound, DbError, EmptyRequest, CategoryNotFound
 from app.core.dependencies import get_current_user, get_possible_user
 from app.schemas.ad_schemas import AdCreate, AdResponse, AdFullResponse, AdUpdate, AdFilterSchema, AdListResponse
 from app.services.ad_service import service_create_ad, service_update_ad, service_delete_ad
@@ -62,8 +62,8 @@ def create_ad(
 
 @router.get("/", response_model=AdListResponse)
 @handle_ads_errors
-def get_ads(skip: int = 0, limit: int = 10, ad: AdFilterSchema = Depends(), db: Session = Depends(get_db)):
-    return service_get_ads(skip, limit, ad, db)
+def get_ads(skip: int = 0, limit: int = 10, ad: AdFilterSchema = Depends(), user: User = Depends(get_possible_user), db: Session = Depends(get_db)):
+    return service_get_ads(skip, limit, ad, user, db)
 
 
 @router.get("/my", response_model=List[AdResponse])

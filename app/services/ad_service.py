@@ -1,11 +1,11 @@
 import os
 
 from uuid import  uuid4
-from sqlalchemy import desc, asc
+from sqlalchemy import desc, asc, exists, and_, false
 from sqlalchemy.orm import joinedload
 from sqlalchemy.exc import IntegrityError
 
-from app.models import Ad, AdImage, Status, Category
+from app.models import Ad, AdImage, Status, Category, Favorite
 from app.errors import AdsNotFound, DbError, EmptyRequest, CategoryNotFound
 
 
@@ -69,41 +69,58 @@ def service_create_ad(ad, images, user, db):
     return db_add
 
 
-def service_get_ads(skip, limit, ad, db):
-    query = db.query(Ad).filter(Ad.status == Status.ACTIVE)
+def service_get_ads(skip: int, limit: int, ad, user, db):
+    user_condition = Favorite.user_id == user.id if user else false()
 
+    # 2. Создаем подзапрос EXISTS для колонки is_favorite
+    # .select_from(Favorite) обязателен для Postgres, чтобы он видел таблицу в подзапросе
+    is_favorite_query = exists(
+        Favorite.ad_id
+    ).select_from(Favorite).where(
+        and_(
+            Favorite.ad_id == Ad.id,
+            user_condition
+        )
+    ).label("is_favorite")
+
+    # 3. Основной запрос (выбираем объект Ad + виртуальную колонку)
+    query = db.query(Ad, is_favorite_query).filter(Ad.status == Status.ACTIVE)
+
+    # ФИЛЬТРАЦИЯ
     if ad.category:
         query = query.join(Category).filter(Category.slug == ad.category)
 
-    if ad.min_price is not None:  # Так делаем из за того что у нас Decimal
+    if ad.min_price is not None:
         query = query.filter(Ad.price >= ad.min_price)
 
-    if ad.max_price is not None:  # Так делаем из за того что у нас Decimal
+    if ad.max_price is not None:
         query = query.filter(Ad.price <= ad.max_price)
 
     if ad.search:
         query = query.filter(Ad.title.ilike(f"%{ad.search}%"))
 
-    if ad.sort_by == "date_desc":
-        query = query.order_by(desc(Ad.created_at))
-
-    elif ad.sort_by == "date_asc":
-        query = query.order_by(asc(Ad.created_at))
-
-    elif ad.sort_by == "price_desc":
-        query = query.order_by(desc(Ad.price))
-
-    elif ad.sort_by == "price_asc":
-        query = query.order_by(asc(Ad.price))
-
-    elif ad.sort_by == 'views_desc':
-        query = query.order_by(desc(Ad.views))
-
-    elif ad.sort_by == 'views_asc':
-        query = query.order_by(asc(Ad.views))
+    # СОРТИРОВКА 
+    sort_map = {
+        "date_desc": desc(Ad.created_at),
+        "date_asc": asc(Ad.created_at),
+        "price_desc": desc(Ad.price),
+        "price_asc": asc(Ad.price),
+        "views_desc": desc(Ad.views),
+        "views_asc": asc(Ad.views),
+    }
+    
+    if ad.sort_by in sort_map:
+        query = query.order_by(sort_map[ad.sort_by])
 
     total = query.count()
-    items = query.offset(skip).limit(limit).all()
+    results = query.offset(skip).limit(limit).all()
+
+    # 5. Мапим результаты в объекты с полем is_favorite
+    items = []
+    for ad_obj, is_fav in results:
+        # SQLAlchemy объекты позволяют добавлять динамические атрибуты
+        ad_obj.is_favorite = is_fav
+        items.append(ad_obj)
 
     return {"total": total, "items": items}
 

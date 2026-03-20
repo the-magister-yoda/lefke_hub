@@ -28,6 +28,7 @@ class AdResponse(BaseModel):
     price: Decimal
     category: CategoryResponse
     main_image: str
+    is_favorite: bool = False
     created_at: datetime
     views: int
 

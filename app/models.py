@@ -41,7 +41,7 @@ class User(Base):
     status = Column(Enum(Status), nullable=False, default=Status.ACTIVE)
 
     ads = relationship("Ad", back_populates="user")
-
+    favorites = relationship("Favorite", back_populates="user", cascade="all, delete")
 
 class Ad(Base):
     __tablename__ = "ads"
@@ -63,6 +63,7 @@ class Ad(Base):
     user = relationship("User", back_populates="ads")
     images = relationship("AdImage", back_populates="ad", cascade="all, delete")
     category = relationship("Category", back_populates="ads")
+    favorites = relationship("Favorite", back_populates="ad", cascade="all, delete")
 
 
 class AdImage(Base):
@@ -78,4 +79,14 @@ class AdImage(Base):
 
     ad = relationship("Ad", back_populates="images")
 
+
+class Favorite(Base):
+    __tablename__ = "favorites"
+
+    user_id = Column(Integer, ForeignKey("users.id"), primary_key=True, nullable=False)
+    ad_id = Column(Integer, ForeignKey("ads.id"), primary_key=True, nullable=False)
+    added_at = Column(DateTime, default=func.now())
+
+    user = relationship("User", back_populates="favorites")
+    ad = relationship("Ad", back_populates="favorites")
 
