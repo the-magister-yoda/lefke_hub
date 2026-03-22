@@ -1,11 +1,10 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session, sessionmaker, declarative_base
 
+from app.core.setup_token import settings
 
-DATABASE_URL = "postgresql+psycopg2://myuser:1234@localhost:5432/lefke_hub"
 
-
-engine = create_engine(DATABASE_URL)
+engine = create_engine(settings.DATABASE_URL)
 
 
 SessionLocal = sessionmaker(
