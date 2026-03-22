@@ -1,163 +1,120 @@
-import { useEffect, useState } from "react"
-import { api } from "../api/api"
-import { Link } from "react-router-dom"
+import { useEffect, useState } from "react";
+import { api } from "../api/api";
+import AdCard from "../components/AdCard";
+import { useNavigate } from "react-router-dom";
 
 function MyProfile() {
-  const [ads, setAds] = useState([])
-  const [user, setUser] = useState(null)
-  const [tab, setTab] = useState("active")
+  const [ads, setAds] = useState([]);
+  const [user, setUser] = useState(null);
+  const [tab, setTab] = useState("active");
+  const navigate = useNavigate();
 
   useEffect(() => {
-    fetchUser()
-  }, [])
+    api.get("/user/me").then(res => setUser(res.data));
+  }, []);
 
   useEffect(() => {
-    fetchAds()
-  }, [tab])
+    fetchAds();
+  }, [tab]);
 
   const fetchAds = async () => {
+    const url = tab === "active" ? "/ad/my" : "/ad/my/archived";
     try {
-      const url = tab === "active" ? "/ad/my" : "/ad/my/archived"
-      const res = await api.get(url)
-      setAds(res.data)
+      const res = await api.get(url);
+      setAds(res.data);
     } catch (err) {
-      console.log(err)
+      console.error("Error fetching ads:", err);
     }
-  }
+  };
 
-  const fetchUser = async () => {
-    try {
-      const res = await api.get("/user/me")
-      setUser(res.data)
-    } catch (err) {
-      console.log(err)
+  const handleAction = async (type, id) => {
+    if (type === 'delete') {
+      if (window.confirm("Move this ad to archive?")) {
+        try {
+          await api.delete(`/ad/${id}`);
+          setTab("archived"); // Сразу показываем, где теперь лежит объявление
+          fetchAds();
+        } catch (err) {
+          alert("Error archiving ad");
+        }
+      }
+    } 
+    else if (type === 'update') {
+      navigate(`/edit-ad/${id}`);
     }
-  }
+    else if (type === 'activate') {
+      try {
+        // Вызываем новую ручку на бэке
+        await api.patch(`/ad/restore/${id}`);
+        setTab("active"); // Возвращаем пользователя во вкладку активных
+        fetchAds();
+      } catch (err) {
+        console.error("Restore error:", err);
+        alert("Error activating ad");
+      }
+    }
+  };
 
   return (
-    <div className="max-w-7xl mx-auto px-10 mt-6">
-
-      <div className="flex gap-10">
-
-        {/* ЛЕВАЯ ЧАСТЬ */}
-        <div className="flex-1">
-
-          {/* Заголовок */}
-          <h1 className="text-2xl font-semibold mb-4">
-            Your Ads
-          </h1>
-
-          {/* ТАБЫ */}
-          <div className="flex gap-6 mb-6 border-b pb-2">
-
-            <button
-              onClick={() => setTab("active")}
-              className={`pb-1 ${
-                tab === "active"
-                  ? "border-b-2 border-black font-medium"
-                  : "text-gray-500"
-              }`}
+    <div className="max-w-7xl mx-auto px-6 mt-10 pb-20">
+      <div className="flex flex-col md:flex-row gap-10">
+        
+        {/* Sidebar */}
+        <div className="w-full md:w-64">
+          <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-200 flex flex-col items-center">
+            <div className="w-20 h-20 bg-emerald-950 text-white rounded-full flex items-center justify-center text-3xl font-black mb-4 shadow-lg">
+              {user?.username?.[0].toUpperCase()}
+            </div>
+            <h2 className="font-black text-xl text-emerald-950">{user?.username}</h2>
+            <p className="text-gray-400 text-[10px] font-black uppercase tracking-widest mt-1 mb-6">ID: {user?.id}</p>
+            <button 
+              onClick={() => navigate('/setting')} 
+              className="w-full py-3 border-2 border-emerald-950 text-emerald-950 rounded-xl font-black hover:bg-emerald-50 transition-all active:scale-95 text-sm"
             >
-              Active
+              Settings
             </button>
-
-            <button
-              onClick={() => setTab("archived")}
-              className={`pb-1 ${
-                tab === "archived"
-                  ? "border-b-2 border-black font-medium"
-                  : "text-gray-500"
-              }`}
-            >
-              Archived
-            </button>
-
           </div>
+        </div>
 
-          {/* ОБЪЯВЛЕНИЯ */}
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-            {ads.map(ad => (
-              <Link
-                key={ad.id}
-                to={`/ad/${ad.id}`}
-                className="block no-underline"
+        {/* Ads Section */}
+        <div className="flex-1">
+          <div className="flex gap-8 border-b border-gray-200 mb-8">
+            {['active', 'archived'].map(t => (
+              <button 
+                key={t}
+                onClick={() => setTab(t)}
+                className={`pb-4 text-lg font-black tracking-tight transition-all relative ${
+                  tab === t ? "text-emerald-950" : "text-gray-400 hover:text-gray-600"
+                }`}
               >
-                <div className="bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-md transition">
-
-                  <div className="w-full h-40 bg-gray-100">
-                    {ad.main_image ? (
-                      <img
-                        src={`http://localhost:8000/${ad.main_image}`}
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <div className="flex items-center justify-center h-full text-gray-400">
-                        No image
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="p-3">
-                    <p className="font-semibold text-black line-clamp-1">
-                      {ad.title}
-                    </p>
-
-                    <p className="text-sm text-gray-600">
-                      {ad.category?.name}
-                    </p>
-
-                    <p className="text-lg font-bold text-black mt-1">
-                      {ad.price}$
-                    </p>
-                  </div>
-
-                </div>
-              </Link>
+                {t.charAt(0).toUpperCase() + t.slice(1)} Ads
+                {tab === t && (
+                  <div className="absolute bottom-0 left-0 w-full h-1 bg-emerald-950 rounded-full" />
+                )}
+              </button>
             ))}
           </div>
 
-        </div>
-
-        {/* ПРАВАЯ ЧАСТЬ */}
-        <div className="w-72">
-
-          <div className="bg-white rounded-xl shadow p-5 sticky top-24">
-
-            <h2 className="text-lg font-semibold mb-4">
-              Account information:
-            </h2>
-
-            {user && (
-            <div className="flex flex-col "> {/* Уменьшили общий зазор между блоками данных */}
-
-              <div className="leading-tight"> {/* leading-tight убирает лишнее пространство сверху/снизу текста */}
-                <p className="text-gray-500 text-[18px] font-bold leading-none mb-0.5">Username:</p>
-                <p className="font-medium text-[16px] leading-none">{user.username}</p>
-              </div>
-
-              <div className="leading-tight">
-                <p className="text-gray-500 text-[18px] font-bold leading-none mb-0.5">Email:</p>
-                <p className="font-medium text-[16px] leading-none">{user.email}</p>
-              </div>
-
-              <div className="leading-tight">
-                <p className="text-gray-500 text-[18px] font-bold leading-none mb-0.5">Phone number:</p>
-                <p className="font-medium text-[16px] leading-none">
-                  {user.phone_number || "Not specified"}
-                </p>
-              </div>
-
+          {ads.length > 0 ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {ads.map(ad => (
+                <AdCard 
+                  key={ad.id} 
+                  ad={ad} 
+                  isOwner={true} 
+                  onAction={handleAction} 
+                />
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-20 bg-gray-50 rounded-2xl border-2 border-dashed border-gray-200">
+              <p className="text-gray-400 font-bold uppercase tracking-widest text-xs">No {tab} ads found</p>
             </div>
           )}
-
-          </div>
-
         </div>
-
       </div>
-
     </div>
-  )
+  );
 }
 
-export default MyProfile
+export default MyProfile;

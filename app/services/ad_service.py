@@ -43,6 +43,7 @@ def service_create_ad(ad, images, user, db):
         for file in images:
             
             # Распарсивает любой формат файла чтобы не добавлять только jpg.
+            # Нужно будет сделать список с допустимым разрешениями перед прод а то вдруг вирус загрузим ахахаха.
             ext = file.filename.split(".")[-1]
             filename = f"{uuid4()}.{ext}"
             filepath = f"{UPLOAD_DIR}/{db_add.id}/{filename}"
@@ -72,8 +73,7 @@ def service_create_ad(ad, images, user, db):
 def service_get_ads(skip: int, limit: int, ad, user, db):
     user_condition = Favorite.user_id == user.id if user else false()
 
-    # 2. Создаем подзапрос EXISTS для колонки is_favorite
-    # .select_from(Favorite) обязателен для Postgres, чтобы он видел таблицу в подзапросе
+    # Создаем подзапрос EXISTS для колонки is_favorite для join
     is_favorite_query = exists(
         Favorite.ad_id
     ).select_from(Favorite).where(
@@ -83,10 +83,8 @@ def service_get_ads(skip: int, limit: int, ad, user, db):
         )
     ).label("is_favorite")
 
-    # 3. Основной запрос (выбираем объект Ad + виртуальную колонку)
     query = db.query(Ad, is_favorite_query).filter(Ad.status == Status.ACTIVE)
 
-    # ФИЛЬТРАЦИЯ
     if ad.category:
         query = query.join(Category).filter(Category.slug == ad.category)
 
@@ -99,7 +97,6 @@ def service_get_ads(skip: int, limit: int, ad, user, db):
     if ad.search:
         query = query.filter(Ad.title.ilike(f"%{ad.search}%"))
 
-    # СОРТИРОВКА 
     sort_map = {
         "date_desc": desc(Ad.created_at),
         "date_asc": asc(Ad.created_at),
@@ -115,7 +112,7 @@ def service_get_ads(skip: int, limit: int, ad, user, db):
     total = query.count()
     results = query.offset(skip).limit(limit).all()
 
-    # 5. Мапим результаты в объекты с полем is_favorite
+    # Маппим рез-ты
     items = []
     for ad_obj, is_fav in results:
         # SQLAlchemy объекты позволяют добавлять динамические атрибуты
@@ -216,3 +213,22 @@ def service_delete_ad(ad_id, user, db):
     db.refresh(db_ad)
 
     return db_ad
+
+
+def service_restore_ad(ad_id, user, db):
+    db_ad = db.query(Ad).filter(
+        (Ad.id == ad_id) &
+        (Ad.owner_id == user.id) &
+        (Ad.status == Status.ARCHIVED)
+    ).first()
+
+    if not db_ad:
+        raise AdsNotFound()
+
+    db_ad.status = Status.ACTIVE
+
+    db.commit()
+    db.refresh(db_ad)
+
+    return db_ad
+    

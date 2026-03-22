@@ -26,7 +26,11 @@ def service_register_user(user, db):
 
     hashed_password = hash_password(user.password)
 
-    db_user = User(username=user.username, email=user.email, phone_number=user.phone_number, hashed_password=hashed_password)
+    db_user = User(username=user.username, email=user.email, 
+                phone_number=user.phone_number, 
+                hashed_password=hashed_password
+            )
+
     db.add(db_user)
 
     try:

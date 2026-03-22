@@ -31,6 +31,7 @@ class AdResponse(BaseModel):
     is_favorite: bool = False
     created_at: datetime
     views: int
+    status: Status
 
     class Config:
         from_attributes = True

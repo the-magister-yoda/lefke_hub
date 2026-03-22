@@ -10,7 +10,7 @@ from app.database import get_db
 from app.errors import AdsNotFound, DbError, EmptyRequest, CategoryNotFound
 from app.core.dependencies import get_current_user, get_possible_user
 from app.schemas.ad_schemas import AdCreate, AdResponse, AdFullResponse, AdUpdate, AdFilterSchema, AdListResponse
-from app.services.ad_service import service_create_ad, service_update_ad, service_delete_ad
+from app.services.ad_service import service_create_ad, service_update_ad, service_delete_ad, service_restore_ad
 from app.services.ad_service import service_get_ads, service_get_ad, service_get_my_ads, service_get_my_archived_ads
 
 
@@ -94,3 +94,9 @@ def update_ad(ad_id: int, ad: AdUpdate, user = Depends(get_current_user), db: Se
 @handle_ads_errors
 def delete_ad(ad_id: int, user = Depends(get_current_user), db: Session = Depends(get_db)):
     return service_delete_ad(ad_id, user, db)
+
+
+@router.patch("/restore/{ad_id}", response_model=AdFullResponse)
+@handle_ads_errors
+def restore_ad(ad_id: int, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    return service_restore_ad(ad_id, user, db) 

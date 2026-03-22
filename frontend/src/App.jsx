@@ -6,8 +6,9 @@ import Register from "./pages/Register"
 import CreateAd from "./pages/CreateAd"
 import AdPage from "./pages/AdPage"
 import MyProfile from "./pages/MyProfile"
-import UploadImage from "./pages/UploadImage"
 import SettingPage from "./pages/SettingPage"
+import Favorites from "./pages/Favorites"
+import EditAd from "./pages/EditAd"
 
 
 function App() {
@@ -20,9 +21,10 @@ function App() {
         <Route path="/register" element={<Register />} />
         <Route path="/create" element={<CreateAd />} />
         <Route path="/ad/:id" element={<AdPage />} />
-        <Route path="/ad/:id/upload_image" element={<UploadImage />} />
         <Route path="/myprofile" element={<MyProfile />} />
         <Route path="/setting" element={<SettingPage />} />
+        <Route path="/favorites" element={<Favorites />} />
+        <Route path="/edit-ad/:id" element={<EditAd />} />
       </Routes>
     </BrowserRouter>
   )
