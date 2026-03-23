@@ -105,7 +105,7 @@ function AdPage() {
                 {ad.title}
               </h1>
               <div className="text-3xl font-black text-emerald-900">
-                {ad.price.toLocaleString()} $
+                {ad.price.toLocaleString()} ₺
               </div>
             </div>
 
@@ -119,7 +119,7 @@ function AdPage() {
                   <p className="font-black text-xl text-emerald-950 truncate max-w-[180px]">
                     {ad.user?.username || "Unknown"}
                   </p>
-                  <p className="text-xs text-gray-400 font-bold uppercase tracking-tighter">Member since 2024</p>
+                  <p className="text-xs text-gray-400 font-bold uppercase tracking-tighter">Member since 2026</p>
                 </div>
               </div>
 

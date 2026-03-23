@@ -9,7 +9,7 @@ from app.database import get_db
 from app.errors import UserNotFound, UsernameAlreadyExists, UserActive, EmailAlreadyExists, PhoneNumAlreadyExists
 from app.errors import WrongPassword, AlreadyDeleted, NotRights, DbError, EmptyRequest
 from app.services.user_service import service_register_user, service_login_user, service_update_user, service_delete_user, service_restore_user
-from app.services.user_service import service_get_user, service_get_me, service_get_all_users
+from app.services.user_service import service_get_user, service_get_me, service_get_all_users, service_create_admin
 from app.schemas.user_schemas import UserCreate, UserResponse, UserLogin, UserUpdate, TokenResponse, UserListResponse, UserFullResponse, UserFilterSchema
 from app.core.dependencies import get_current_user
 
@@ -103,3 +103,9 @@ def restore_user(user: UserLogin, db: Session = Depends(get_db)):
 @handle_user_errors
 def get_all_users(skip: int = 0, limit: int = 10, user: User = Depends(get_current_user), user_filter: UserFilterSchema = Depends(), db: Session = Depends(get_db)):
     return service_get_all_users(skip, limit, user, user_filter, db)
+
+
+@router.post('/create/admin', response_model=UserResponse)
+@handle_user_errors
+def create_admin(user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    return service_create_admin(user, db)

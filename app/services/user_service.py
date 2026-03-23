@@ -179,3 +179,22 @@ def service_get_all_users(skip, limit, user, user_filter, db):
 
     return {"total": total, "items": items}
 
+
+def service_create_admin(user, db):
+    db_user = db.query(User).filter(
+            (User.id == user.id) &
+            (User.role == UserRole.USER)
+        ).first()
+
+    if not db_user:
+        raise UserNotFound()
+    
+    db_user.role = UserRole.ADMIN
+
+    db.commit()
+    db.refresh(db_user)
+
+    return db_user
+
+    
+

@@ -37,39 +37,75 @@ function Home() {
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-6 sm:px-10 pb-20">
+    // Главный контейнер БЕЗ ограничений по ширине, чтобы полоса могла растянуться
+    <div className="w-full pb-20 bg-white">
       
-      {/* Теперь поиск в простом блоке без лишних ограничений */}
-      <div className="mt-8 mb-8 w-full">
-        <SearchBar onSearch={(q) => setSearch(q)} />
+     {/* СЕКЦИЯ ПОИСКА */}
+      <div className="w-full bg-[#f2f4f5] pt-[55px] pb-[40px] border-none"> 
+        <div className="max-w-7xl mx-auto px-6 sm:px-10">
+          <SearchBar onSearch={(q) => setSearch(q)} />
+        </div>
       </div>
 
-      <div className="flex gap-3 mb-8 overflow-x-auto pb-2 scrollbar-hide">
-        <button
-          onClick={() => setCategory("")}
-          className={`px-5 py-2 rounded-md font-bold transition whitespace-nowrap ${
-            category === "" ? "bg-black text-white" : "bg-gray-200 text-gray-700"
-          }`}
-        >
-          All
-        </button>
-        {categories.map(cat => (
-          <button
-            key={cat.id}
-            onClick={() => setCategory(cat.slug)}
-            className={`px-5 py-2 rounded-md font-bold whitespace-nowrap transition ${
-              category === cat.slug ? "bg-black text-white" : "bg-gray-200 text-gray-700"
-            }`}
+      {/* 2. СЕКЦИЯ КАТЕГОРИЙ: Белый фон, контент по центру */}
+      <div className="max-w-7xl mx-auto px-6 sm:px-10 mt-16 mb-20">
+        <h2 className="text-3xl font-extrabold text-center mb-12 text-[#002f34]">
+          Categories on this hub
+        </h2>
+        
+        <div className="flex flex-wrap justify-center gap-10 md:gap-14">
+          {/* Кнопка "All": Стала больше (w-24 h-24) */}
+          <div 
+            onClick={() => setCategory("")}
+            className="flex flex-col items-center cursor-pointer group"
           >
-            {cat.name}
-          </button>
-        ))}
+            <div className={`w-24 h-24 rounded-full flex items-center justify-center transition-all duration-300 border-2 ${
+              category === "" ? "bg-emerald-900 border-black shadow-lg" : "bg-gray-100 border-transparent group-hover:bg-gray-200"
+            }`}>
+              {/* ALL стал больше (text-xl) */}
+              <span className={`text-xl font-extrabold ${category === "" ? "text-white" : "text-gray-600"}`}>ALL</span>
+            </div>
+            {/* Текст стал жирнее (font-bold), чернее (text-[#002f34]) и чуть больше */}
+            <span className="mt-4 font-bold text-base text-[#002f34]">All ads</span>
+          </div>
+
+          {/* Список категорий с иконками */}
+          {categories.map(cat => (
+            <div 
+              key={cat.id}
+              onClick={() => setCategory(cat.slug)}
+              className="flex flex-col items-center cursor-pointer group"
+            >
+              {/* Круг стал больше (w-24 h-24), тень при выборе */}
+              <div className={`w-24 h-24 rounded-full flex items-center justify-center transition-all duration-300 border-2 ${
+                category === cat.slug ? "border-black bg-white shadow-xl" : "bg-gray-100 border-transparent group-hover:bg-gray-200"
+              }`}>
+                <img 
+                  src={`/icons/${cat.slug}.png`} 
+                  alt={cat.name}
+                  // Иконка приблизилась! (w-16 h-16 вместо w-12 h-12)
+                  className="w-16 h-16 object-contain"
+                  onError={(e) => { e.target.src = '/icons/default.png'; }}
+                />
+              </div>
+              {/* Текст стал жирнее, чернее (OLX style) и больше */}
+              <span className={`mt-4 font-bold text-base transition-colors ${
+                category === cat.slug ? "text-black" : "text-[#002f34]"
+              }`}>
+                {cat.name}
+              </span>
+            </div>
+          ))}
+        </div>
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-        {ads.map(ad => (
-          <AdCard key={ad.id} ad={ad} onFavoriteToggle={toggleFav} />
-        ))}
+      {/* 3. СЕКЦИЯ ОБЪЯВЛЕНИЙ: Контент по центру */}
+      <div className="max-w-7xl mx-auto px-6 sm:px-10">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+          {ads.map(ad => (
+            <AdCard key={ad.id} ad={ad} onFavoriteToggle={toggleFav} />
+          ))}
+        </div>
       </div>
     </div>
   );

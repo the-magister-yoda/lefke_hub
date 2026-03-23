@@ -3,4 +3,10 @@ __pycache__/
 .env
 venv/
 .idea/
-.env
+uploads/
+.dockerignore
+
+frontend/dist/
+
+# Игнорируем логи ошибок npm
+npm-debug.log*
