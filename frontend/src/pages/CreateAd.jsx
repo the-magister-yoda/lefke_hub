@@ -5,6 +5,9 @@ import { useNavigate } from "react-router-dom";
 function CreateAd() {
   const navigate = useNavigate();
   const [categories, setCategories] = useState([]);
+  const [isLoading, setIsLoading] = useState(false); // Состояние загрузки
+  const [isSuccess, setIsSuccess] = useState(false); // Состояние успеха
+
   const [form, setForm] = useState({
     title: "",
     description: "",
@@ -43,6 +46,8 @@ function CreateAd() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setIsLoading(true); // Включаем крутилку
+
     const data = new FormData();
     data.append("title", form.title);
     data.append("description", form.description);
@@ -52,12 +57,41 @@ function CreateAd() {
 
     try {
       await api.post("/ad/create", data);
-      alert("Объявление создано!");
-      navigate("/");
+      
+      // Искусственная пауза 1.5 сек, чтобы юзер увидел лоадер
+      setTimeout(() => {
+        setIsLoading(false);
+        setIsSuccess(true);
+      }, 1500);
+      
     } catch (err) {
+      setIsLoading(false);
       alert("Ошибка при создании");
     }
   };
+
+  // ЭКРАН УСПЕХА
+  if (isSuccess) {
+    return (
+      <div className="min-h-screen bg-[#f2f4f5] flex items-center justify-center px-10">
+        <div className="bg-white p-12 shadow-sm rounded-sm text-center max-w-md w-full">
+          <div className="w-20 h-20 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-6">
+             <svg className="w-10 h-10 text-emerald-950" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" />
+             </svg>
+          </div>
+          <h2 className="text-2xl font-bold text-[#002f34] mb-4">Your ad has been published!</h2>
+          <p className="text-gray-500 mb-8">It is now visible to everyone in the Lefke community.</p>
+          <button 
+            onClick={() => navigate("/")}
+            className="w-full bg-[#002f34] text-white py-4 rounded-md font-bold text-lg hover:bg-[#003d45] transition-all"
+          >
+            Return to main page
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#f2f4f5] py-10">
@@ -70,7 +104,7 @@ function CreateAd() {
           <div className="bg-white p-8 shadow-sm rounded-sm">
             <h2 className="text-xl font-bold text-[#002f34] mb-6">Describe in details</h2>
             
-            <div className="flex flex-col gap-2 mb-8 max-w-2xl"> {/* Ограничили ширину */}
+            <div className="flex flex-col gap-2 mb-8 max-w-2xl">
               <label className="text-sm font-semibold text-[#002f34]">Write a title *</label>
               <input 
                 name="title" 
@@ -78,16 +112,18 @@ function CreateAd() {
                 className="w-full border border-[#dbe0e2] rounded-md p-4 bg-[#f2f4f5] focus:bg-white focus:border-[#002f34] outline-none transition-all" 
                 onChange={handleChange} 
                 required
+                disabled={isLoading}
               />
             </div>
 
-            <div className="flex flex-col gap-2 max-w-md"> {/* Селект еще чуть уже */}
+            <div className="flex flex-col gap-2 max-w-md">
               <label className="text-sm font-semibold text-[#002f34]">Category *</label>
               <select 
                 name="category_slug" 
                 className="w-full border border-[#dbe0e2] rounded-md p-4 bg-[#f2f4f5] focus:bg-white focus:border-[#002f34] outline-none cursor-pointer" 
                 onChange={handleChange}
                 required
+                disabled={isLoading}
               >
                 <option value="">Select a category</option>
                 {categories.map(cat => (
@@ -103,7 +139,7 @@ function CreateAd() {
             <p className="text-sm text-gray-500 mb-6 font-medium">The first photo will be on the cover of the ad. Drag and drop photo if you want to change the order.</p>
             
             <div className="grid grid-cols-3 gap-6 max-w-4xl"> 
-              {images.length < 6 && (
+              {images.length < 6 && !isLoading && (
                 <label className="aspect-[4/3] border-2 border-dashed border-gray-200 flex flex-col items-center justify-center cursor-pointer hover:bg-emerald-50/30 transition-colors rounded-sm bg-[#f2f4f5] group">
                   <div className="text-[#002f34] font-bold text-[16px] border-b-2 border-[#002f34] pb-0.5">
                     Upload a photo
@@ -114,14 +150,16 @@ function CreateAd() {
 
               {preview.map((img, index) => (
                 <div key={index} className="relative aspect-[4/3] border border-gray-100 rounded-sm overflow-hidden bg-[#f2f4f5] shadow-sm">
-                  <img src={img} className="w-full h-full object-cover" />
-                  <button
-                    type="button"
-                    onClick={() => removeImage(index)}
-                    className="absolute top-2 right-2 bg-black/40 hover:bg-black/70 text-white w-7 h-7 rounded-full flex items-center justify-center transition-colors shadow-lg"
-                  >
-                    ✕
-                  </button>
+                  <img src={img} className="w-full h-full object-cover" alt="preview" />
+                  {!isLoading && (
+                    <button
+                        type="button"
+                        onClick={() => removeImage(index)}
+                        className="absolute top-2 right-2 bg-black/40 hover:bg-black/70 text-white w-7 h-7 rounded-full flex items-center justify-center transition-colors shadow-lg"
+                    >
+                        ✕
+                    </button>
+                  )}
                   {index === 0 && (
                     <div className="absolute bottom-0 w-full bg-[#002f34]/90 text-white text-[10px] text-center py-1.5 uppercase font-bold tracking-widest">
                       Главное
@@ -130,7 +168,7 @@ function CreateAd() {
                 </div>
               ))}
 
-              {[...Array(Math.max(0, 6 - (images.length + (images.length < 6 ? 1 : 0))))].map((_, i) => (
+              {[...Array(Math.max(0, 6 - (images.length + (images.length < 6 && !isLoading ? 1 : 0))))].map((_, i) => (
                 <div key={i} className="aspect-[4/3] bg-[#f2f4f5] rounded-sm flex items-center justify-center">
                    <svg className="w-10 h-10 text-gray-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
@@ -144,13 +182,14 @@ function CreateAd() {
           {/* БЛОК 3: Описание */}
           <div className="bg-white p-8 shadow-sm rounded-sm">
             <h2 className="text-xl font-bold text-[#002f34] mb-6">Description *</h2>
-            <div className="max-w-3xl"> {/* Урезали ширину описания */}
+            <div className="max-w-3xl">
               <textarea 
                 name="description" 
-                placeholder="Write down some details that would help other people understand what you are selling ans which unique details or functions you may have." 
+                placeholder="Write down some details..." 
                 className="w-full border border-[#dbe0e2] rounded-md p-4 bg-[#f2f4f5] focus:bg-white focus:border-[#002f34] outline-none min-h-[220px] transition-all" 
                 onChange={handleChange} 
                 required
+                disabled={isLoading}
               />
             </div>
           </div>
@@ -165,15 +204,24 @@ function CreateAd() {
                 className="w-48 border border-[#dbe0e2] rounded-md p-4 bg-[#f2f4f5] focus:bg-white focus:border-[#002f34] outline-none font-bold text-lg" 
                 onChange={handleChange} 
                 required
+                disabled={isLoading}
               />
               <span className="text-xl font-bold text-[#002f34]">₺</span>
             </div>
           </div>
 
-          <div className="flex justify-end mb-24">
-            <button className="bg-[#002f34] text-white px-14 py-4 rounded-md font-bold text-lg hover:bg-[#003d45] transition-all shadow-md active:scale-95">
-              Publish
-            </button>
+          <div className="flex justify-end mb-24 min-h-[64px] items-center">
+            {isLoading ? (
+              /* КРУТИЛКА */
+              <div className="flex items-center gap-3 px-14">
+                <div className="w-8 h-8 border-4 border-emerald-950/20 border-t-emerald-950 rounded-full animate-spin"></div>
+                <span className="font-bold text-[#002f34]">Publishing...</span>
+              </div>
+            ) : (
+              <button className="bg-[#002f34] text-white px-14 py-4 rounded-md font-bold text-lg hover:bg-[#003d45] transition-all shadow-md active:scale-95">
+                Publish
+              </button>
+            )}
           </div>
         </form>
       </div>

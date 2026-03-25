@@ -49,7 +49,7 @@ class Ad(Base):
     id = Column(Integer, primary_key=True, index=True)
     title = Column(String, nullable=False)
     description = Column(String, nullable=False)
-    price = Column(Numeric(7, 2), nullable=False)
+    price = Column(Numeric(10, 2), nullable=False)
     main_image = Column(String, nullable=True)
 
     category_id = Column(Integer, ForeignKey("categories.id"), nullable=False)

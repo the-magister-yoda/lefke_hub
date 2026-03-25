@@ -5,6 +5,7 @@ from sqlalchemy import desc, asc, exists, and_, false
 from sqlalchemy.orm import joinedload
 from sqlalchemy.exc import IntegrityError
 
+from app.utils.image_processing import process_and_save_image
 from app.models import Ad, AdImage, Status, Category, Favorite
 from app.errors import AdsNotFound, DbError, EmptyRequest, CategoryNotFound
 
@@ -37,20 +38,15 @@ def service_create_ad(ad, images, user, db):
     if images:
 
         os.makedirs(f"{UPLOAD_DIR}/{db_add.id}", exist_ok=True)
-
         order = 1
 
         for file in images:
             
-            # Распарсивает любой формат файла чтобы не добавлять только jpg.
-            # Нужно будет сделать список с допустимым разрешениями перед прод а то вдруг вирус загрузим ахахаха.
-            ext = file.filename.split(".")[-1]
-            filename = f"{uuid4()}.{ext}"
+            filename = f"{uuid4()}.webp"
             filepath = f"{UPLOAD_DIR}/{db_add.id}/{filename}"
 
             # сохраняем файл
-            with open(filepath, "wb") as fd:
-                fd.write(file.file.read())
+            process_and_save_image(file, filepath)
 
             db_image = AdImage(
                 ad_id=db_add.id,

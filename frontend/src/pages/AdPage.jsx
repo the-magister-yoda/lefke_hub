@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { API_URL } from "../api/api";
 import { api } from "../api/api";
 
 function AdPage() {
@@ -47,7 +48,7 @@ function AdPage() {
               {ad.images && ad.images.length > 0 ? (
                 <>
                   <img
-                    src={`http://localhost:8000/${ad.images[current]?.url}`}
+                    src={`${API_URL}/${ad.images[current]?.url}`}
                     className="max-h-full max-w-full object-contain p-4 transition-transform duration-500"
                     alt={ad.title}
                   />

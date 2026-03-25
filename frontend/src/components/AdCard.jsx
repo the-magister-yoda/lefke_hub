@@ -35,7 +35,7 @@ function AdCard({ ad, onFavoriteToggle, isOwner = false, onAction }) {
           
           <div className="flex justify-between items-center mt-auto">
             <p className="text-lg font-extrabold text-[#002f34] m-0">
-              {ad.price.toLocaleString()}₺
+              {ad.price.toLocaleString()} ₺
             </p>
             
             {!isOwner && (

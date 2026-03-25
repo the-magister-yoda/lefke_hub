@@ -66,7 +66,7 @@ function MyProfile() {
               {user?.username?.[0].toUpperCase()}
             </div>
             <h2 className="font-black text-xl text-emerald-950">{user?.username}</h2>
-            <p className="text-gray-400 text-[10px] font-black uppercase tracking-widest mt-1 mb-6">ID: {user?.id}</p>
+            <p className="text-gray-400 text-[10px] font-black uppercase tracking-widest mt-1 mb-6">ID: 1000{user?.id}</p>
             <button 
               onClick={() => navigate('/setting')} 
               className="w-full py-3 border-2 border-emerald-950 text-emerald-950 rounded-xl font-black hover:bg-emerald-50 transition-all active:scale-95 text-sm"

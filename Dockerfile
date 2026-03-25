@@ -1,20 +1,25 @@
 # Базовый образ
 FROM python:3.11-slim
 
-# Рабочая директория внутри контейнера
+# Рабочая директория
 WORKDIR /app
 
-# Копируем файл зависимостей
+# Устанавливаем зависимости для Pillow и работы с сетью
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libmagic1 \
+    && rm -rf /var/lib/apt/lists/*
+
+# Копируем зависимости из корня
 COPY requirements.txt .
-
-# Устанавливаем зависимости
 RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install gunicorn uvicorn
 
-# Копируем весь проект
+# Копируем всё содержимое (включая папку app)
 COPY . .
 
-# Открываем порт
-EXPOSE 8000
+# Создаем папку для загрузок
+RUN mkdir -p uploads
 
-# Команда запуска
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Запуск через Gunicorn (Production-ready)
+# Обрати внимание на путь app.main:app
+CMD ["gunicorn", "-w", "4", "-k", "uvicorn.workers.UvicornWorker", "app.main:app", "--bind", "0.0.0.0:8000"]
