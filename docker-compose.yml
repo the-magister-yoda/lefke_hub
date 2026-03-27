@@ -40,9 +40,21 @@ services:
     restart: always
     # Весь твой сайт будет висеть на стандартном 80-м порту (HTTP)
     ports:
-      - "80:80"
+      - "8080:80"
     depends_on:
       - backend
+
+  nginx-proxy-manager:
+    image: 'jc21/nginx-proxy-manager:latest'
+    restart: always
+    ports:
+      - '80:80'
+      - '81:81'
+      - '443:443'
+    volumes:
+      - ./npm_data:/data
+      - ./npm_letsencrypt:/etc/letsencrypt
+
 
 volumes:
   postgres_data:

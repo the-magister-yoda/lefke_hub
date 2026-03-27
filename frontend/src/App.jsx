@@ -9,25 +9,31 @@ import MyProfile from "./pages/MyProfile"
 import SettingPage from "./pages/SettingPage"
 import Favorites from "./pages/Favorites"
 import EditAd from "./pages/EditAd"
+import BottomNav from "./components/BottomNav";
 
 
 function App() {
   return (
-    <BrowserRouter>
-      <Navbar />
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
-        <Route path="/create" element={<CreateAd />} />
-        <Route path="/ad/:id" element={<AdPage />} />
-        <Route path="/myprofile" element={<MyProfile />} />
-        <Route path="/setting" element={<SettingPage />} />
-        <Route path="/favorites" element={<Favorites />} />
-        <Route path="/edit-ad/:id" element={<EditAd />} />
-      </Routes>
+    <BrowserRouter> 
+      <div className="app-container min-h-screen bg-white">
+        <Navbar />
+        <div className="pb-16 md:pb-0"> 
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
+            <Route path="/create" element={<CreateAd />} />
+            <Route path="/ad/:id" element={<AdPage />} />
+            <Route path="/myprofile" element={<MyProfile />} />
+            <Route path="/setting" element={<SettingPage />} />
+            <Route path="/favorites" element={<Favorites />} />
+            <Route path="/edit-ad/:id" element={<EditAd />} />
+          </Routes>
+        </div>
+        <BottomNav /> 
+      </div>
     </BrowserRouter>
-  )
+  );
 }
 
-export default App
+export default App;

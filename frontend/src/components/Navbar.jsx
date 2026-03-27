@@ -7,7 +7,6 @@ function Navbar() {
   const [open, setOpen] = useState(false);
   const navigate = useNavigate();
 
-  // СОСТОЯНИЯ ДЛЯ СКРОЛЛА
   const [isVisible, setIsVisible] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
 
@@ -21,9 +20,9 @@ function Navbar() {
 
     const controlNavbar = () => {
       if (window.scrollY > lastScrollY && window.scrollY > 100) {
-        setIsVisible(false); // Скроллим вниз — прячем
+        setIsVisible(false);
       } else {
-        setIsVisible(true);  // Скроллим вверх — показываем
+        setIsVisible(true);
       }
       setLastScrollY(window.scrollY);
     };
@@ -41,28 +40,27 @@ function Navbar() {
 
   return (
     <>
-      {/* 1. ФИКСИРОВАННЫЙ НАВБАР */}
       <nav 
         className={`bg-emerald-950 text-white fixed top-0 w-full z-50 shadow-md transition-transform duration-300 ${
           isVisible ? "translate-y-0" : "-translate-y-full"
         }`}
       >
-        {/* h-[72px] — Твоя высота тут */}
-        <div className="max-w-7xl mx-auto px-10 flex justify-between items-center h-[72px]">
+        {/* px-4 для мобилок, px-10 для компа */}
+        <div className="max-w-7xl mx-auto px-4 md:px-10 flex justify-between items-center h-[72px]">
           
           {/* LOGO */}
-          <Link to="/" className="text-2xl font-extrabold text-white no-underline tracking-tight">
+          <Link to="/" className="text-xl md:text-2xl font-extrabold text-white no-underline tracking-tight">
             LefkeHub
           </Link>
 
-          <div className="flex items-center gap-6">
+          {/* КНОПКИ: Скрыты на мобилках (hidden), видны на десктопе (md:flex) */}
+          <div className="hidden md:flex items-center gap-6">
             {user ? (
               <div
                 className="relative h-[72px] flex items-center"
                 onMouseEnter={() => setOpen(true)}
                 onMouseLeave={() => setOpen(false)}
               >
-                {/* TRIGGER */}
                 <div
                   onClick={() => navigate("/myprofile")}
                   className="flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity"
@@ -76,7 +74,6 @@ function Navbar() {
                   </span>
                 </div>
 
-                {/* DROPDOWN MENU */}
                 <div
                   className={`absolute right-[-16px] top-[72px] w-56 bg-white text-[#002f34] rounded-sm shadow-xl border border-gray-100 overflow-hidden transition-all duration-200 
                     ${open ? "opacity-100 visible translate-y-0" : "opacity-0 invisible translate-y-1"}`}
@@ -92,14 +89,9 @@ function Navbar() {
                   </div>
 
                   <div className="flex flex-col py-1">
-                    <div className="px-4 py-1.5 text-[11px] font-bold text-gray-400 uppercase tracking-wider">Your profile</div>
                     <div onClick={() => navigate("/myprofile")} className="px-4 py-1.5 hover:bg-emerald-950 hover:text-white cursor-pointer transition-colors text-[14px]">Your ads</div>
                     <div onClick={() => navigate("/setting")} className="px-4 py-1.5 hover:bg-emerald-950 hover:text-white cursor-pointer transition-colors text-[14px]">Settings</div>
-                    <div className="px-4 py-1.5 mt-1 text-[11px] font-bold text-gray-400 uppercase tracking-wider">Favourites:</div>
-                    <div onClick={() => navigate("/favorites")} className="px-4 py-1.5 hover:bg-emerald-950 hover:text-white cursor-pointer transition-colors text-[14px] flex justify-between items-center group">
-                      <span>Ads</span>
-                      <span className="bg-gray-100 px-2 py-0.5 rounded-full text-[10px] text-gray-500 group-hover:bg-emerald-800 group-hover:text-white">View</span>
-                    </div>
+                    <div onClick={() => navigate("/favorites")} className="px-4 py-1.5 hover:bg-emerald-950 hover:text-white cursor-pointer transition-colors text-[14px]">Favorites</div>
                     <div className="border-t border-gray-100 my-1"></div>
                     <div onClick={logout} className="px-4 py-1.5 hover:bg-emerald-950 hover:text-white cursor-pointer transition-colors text-[14px]">Logout</div>
                   </div>
@@ -111,17 +103,17 @@ function Navbar() {
 
             <Link
               to="/create"
-              className="bg-white text-emerald-950 px-5 py-2 rounded-md font-bold text-sm hover:bg-gray-100 transition no-underline border-2 border-transparent"
+              className="bg-white text-emerald-950 px-5 py-2 rounded-md font-bold text-sm hover:bg-gray-100 transition no-underline"
             >
               Post an ad
             </Link>
           </div>
+          
+          {/* Заглушка для мобилок, чтобы навбар не казался пустым справа, 
+              можно добавить иконку уведомлений или поиска здесь в будущем */}
         </div>
       </nav>
 
-      {/* 2. БЛОК-РАСПОРКА */}
-      {/* Высота h-[72px] в точности совпадает с высотой навбара. 
-          Теперь на любой странице контент начнется ровно ПОД навбаром. */}
       <div className="h-[72px]"></div>
     </>
   );

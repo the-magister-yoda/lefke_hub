@@ -5,8 +5,8 @@ import { useNavigate } from "react-router-dom";
 function CreateAd() {
   const navigate = useNavigate();
   const [categories, setCategories] = useState([]);
-  const [isLoading, setIsLoading] = useState(false); // Состояние загрузки
-  const [isSuccess, setIsSuccess] = useState(false); // Состояние успеха
+  const [isLoading, setIsLoading] = useState(false);
+  const [isSuccess, setIsSuccess] = useState(false);
 
   const [form, setForm] = useState({
     title: "",
@@ -29,7 +29,7 @@ function CreateAd() {
   const handleImages = (e) => {
     const files = Array.from(e.target.files);
     if (images.length + files.length > 6) {
-      alert("Максимум 6 фотографий");
+      alert("Maximum 6 photos allowed");
       return;
     }
     setImages(prev => [...prev, ...files]);
@@ -46,7 +46,7 @@ function CreateAd() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setIsLoading(true); // Включаем крутилку
+    setIsLoading(true);
 
     const data = new FormData();
     data.append("title", form.title);
@@ -57,36 +57,32 @@ function CreateAd() {
 
     try {
       await api.post("/ad/create", data);
-      
-      // Искусственная пауза 1.5 сек, чтобы юзер увидел лоадер
       setTimeout(() => {
         setIsLoading(false);
         setIsSuccess(true);
       }, 1500);
-      
     } catch (err) {
       setIsLoading(false);
-      alert("Ошибка при создании");
+      alert("Error creating ad. Please try again.");
     }
   };
 
-  // ЭКРАН УСПЕХА
   if (isSuccess) {
     return (
-      <div className="min-h-screen bg-[#f2f4f5] flex items-center justify-center px-10">
-        <div className="bg-white p-12 shadow-sm rounded-sm text-center max-w-md w-full">
+      <div className="min-h-screen bg-[#f2f4f5] flex items-center justify-center px-6">
+        <div className="bg-white p-8 shadow-sm rounded-2xl text-center max-w-md w-full">
           <div className="w-20 h-20 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-6">
              <svg className="w-10 h-10 text-emerald-950" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" />
              </svg>
           </div>
-          <h2 className="text-2xl font-bold text-[#002f34] mb-4">Your ad has been published!</h2>
-          <p className="text-gray-500 mb-8">It is now visible to everyone in the Lefke community.</p>
+          <h2 className="text-2xl font-bold text-[#002f34] mb-2">Success!</h2>
+          <p className="text-gray-500 mb-8">Your ad has been published to LefkeHub.</p>
           <button 
             onClick={() => navigate("/")}
-            className="w-full bg-[#002f34] text-white py-4 rounded-md font-bold text-lg hover:bg-[#003d45] transition-all"
+            className="w-full bg-[#002f34] text-white py-4 rounded-xl font-bold text-lg active:scale-95 transition-all"
           >
-            Return to main page
+            Back to Home
           </button>
         </div>
       </div>
@@ -94,138 +90,107 @@ function CreateAd() {
   }
 
   return (
-    <div className="min-h-screen bg-[#f2f4f5] py-10">
-      <div className="max-w-7xl mx-auto px-10">
-        <h1 className="text-3xl font-bold text-[#002f34] mb-8">Create an Ad</h1>
+    <div className="min-h-screen bg-white md:bg-[#f2f4f5] pb-32 pt-4 md:pt-10">
+      <div className="max-w-xl md:max-w-7xl mx-auto px-5 md:px-10">
+        
+        <div className="mb-6 md:mb-10">
+          <h1 className="text-2xl md:text-4xl font-extrabold text-[#002f34] tracking-tight">Create Ad</h1>
+          <p className="text-gray-500 font-medium md:text-lg">Describe your item in details</p>
+        </div>
 
-        <form onSubmit={handleSubmit} className="flex flex-col gap-6 w-full"> 
+        <form onSubmit={handleSubmit} className="flex flex-col gap-6 md:gap-10">
           
-          {/* БЛОК 1: Подробности */}
-          <div className="bg-white p-8 shadow-sm rounded-sm">
-            <h2 className="text-xl font-bold text-[#002f34] mb-6">Describe in details</h2>
-            
-            <div className="flex flex-col gap-2 mb-8 max-w-2xl">
-              <label className="text-sm font-semibold text-[#002f34]">Write a title *</label>
-              <input 
-                name="title" 
-                placeholder="For example: Iphone 15" 
-                className="w-full border border-[#dbe0e2] rounded-md p-4 bg-[#f2f4f5] focus:bg-white focus:border-[#002f34] outline-none transition-all" 
-                onChange={handleChange} 
-                required
-                disabled={isLoading}
-              />
-            </div>
-
-            <div className="flex flex-col gap-2 max-w-md">
-              <label className="text-sm font-semibold text-[#002f34]">Category *</label>
-              <select 
-                name="category_slug" 
-                className="w-full border border-[#dbe0e2] rounded-md p-4 bg-[#f2f4f5] focus:bg-white focus:border-[#002f34] outline-none cursor-pointer" 
-                onChange={handleChange}
-                required
-                disabled={isLoading}
-              >
-                <option value="">Select a category</option>
-                {categories.map(cat => (
-                  <option key={cat.id} value={cat.slug}>{cat.name}</option>
-                ))}
-              </select>
-            </div>
-          </div>
-
-          {/* БЛОК 2: ФОТО */}
-          <div className="bg-white p-8 shadow-sm rounded-sm">
-            <h2 className="text-xl font-bold text-[#002f34] mb-2">Photo</h2>
-            <p className="text-sm text-gray-500 mb-6 font-medium">The first photo will be on the cover of the ad. Drag and drop photo if you want to change the order.</p>
-            
-            <div className="grid grid-cols-3 gap-6 max-w-4xl"> 
-              {images.length < 6 && !isLoading && (
-                <label className="aspect-[4/3] border-2 border-dashed border-gray-200 flex flex-col items-center justify-center cursor-pointer hover:bg-emerald-50/30 transition-colors rounded-sm bg-[#f2f4f5] group">
-                  <div className="text-[#002f34] font-bold text-[16px] border-b-2 border-[#002f34] pb-0.5">
-                    Upload a photo
-                  </div>
-                  <input type="file" multiple className="hidden" onChange={handleImages} accept="image/*" />
-                </label>
-              )}
-
-              {preview.map((img, index) => (
-                <div key={index} className="relative aspect-[4/3] border border-gray-100 rounded-sm overflow-hidden bg-[#f2f4f5] shadow-sm">
-                  <img src={img} className="w-full h-full object-cover" alt="preview" />
-                  {!isLoading && (
-                    <button
-                        type="button"
-                        onClick={() => removeImage(index)}
-                        className="absolute top-2 right-2 bg-black/40 hover:bg-black/70 text-white w-7 h-7 rounded-full flex items-center justify-center transition-colors shadow-lg"
-                    >
-                        ✕
-                    </button>
-                  )}
-                  {index === 0 && (
-                    <div className="absolute bottom-0 w-full bg-[#002f34]/90 text-white text-[10px] text-center py-1.5 uppercase font-bold tracking-widest">
-                      Главное
+          <div className="bg-white md:p-10 md:shadow-md md:rounded-3xl">
+            <div className="flex flex-col md:flex-row gap-6 md:gap-12">
+              
+              {/* Блок фото (Здесь тоже ограничиваем ширину для мобилок) */}
+              <div className="w-[85%] md:w-1/2">
+                <label className="relative flex flex-col items-center justify-center py-10 md:py-20 border-2 border-dashed border-gray-200 rounded-3xl bg-[#f2f4f5] mb-6 shadow-inner cursor-pointer hover:bg-[#ebedef] transition-all group overflow-hidden">
+                    <input type="file" multiple className="hidden" onChange={handleImages} accept="image/*" />
+                    <div className="flex gap-3 mb-5 transition-transform group-active:scale-95">
+                        <div className="w-12 h-16 bg-yellow-100 rounded-xl flex items-center justify-center text-2xl">🏠</div>
+                        <div className="w-16 h-20 bg-yellow-200 rounded-xl flex items-center justify-center text-3xl z-10 scale-110">🚲</div>
+                        <div className="w-12 h-16 bg-yellow-100 rounded-xl flex items-center justify-center text-2xl">📷</div>
                     </div>
-                  )}
+                    <div className="text-center">
+                      <span className="text-emerald-950 font-bold text-lg border-b-2 border-emerald-950 block mb-1">Add Photos</span>
+                      <span className="text-gray-400 text-xs font-medium">Up to 6 photos</span>
+                    </div>
+                </label>
+
+                <div className="grid grid-cols-3 md:grid-cols-4 gap-3">
+                    {preview.map((img, index) => (
+                        <div key={index} className="relative aspect-square rounded-2xl overflow-hidden bg-gray-100 border shadow-sm">
+                            <img src={img} className="w-full h-full object-cover" alt="preview" />
+                            <button 
+                              type="button" 
+                              onClick={(e) => { e.preventDefault(); removeImage(index); }} 
+                              className="absolute top-1.5 right-1.5 bg-black/40 text-white w-7 h-7 rounded-full text-[10px] flex items-center justify-center"
+                            >✕</button>
+                        </div>
+                    ))}
                 </div>
-              ))}
-
-              {[...Array(Math.max(0, 6 - (images.length + (images.length < 6 && !isLoading ? 1 : 0))))].map((_, i) => (
-                <div key={i} className="aspect-[4/3] bg-[#f2f4f5] rounded-sm flex items-center justify-center">
-                   <svg className="w-10 h-10 text-gray-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
-                  </svg>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* БЛОК 3: Описание */}
-          <div className="bg-white p-8 shadow-sm rounded-sm">
-            <h2 className="text-xl font-bold text-[#002f34] mb-6">Description *</h2>
-            <div className="max-w-3xl">
-              <textarea 
-                name="description" 
-                placeholder="Write down some details..." 
-                className="w-full border border-[#dbe0e2] rounded-md p-4 bg-[#f2f4f5] focus:bg-white focus:border-[#002f34] outline-none min-h-[220px] transition-all" 
-                onChange={handleChange} 
-                required
-                disabled={isLoading}
-              />
-            </div>
-          </div>
-
-          {/* БЛОК 4: Цена */}
-          <div className="bg-white p-8 shadow-sm rounded-sm">
-            <h2 className="text-xl font-bold text-[#002f34] mb-6">Price</h2>
-            <div className="flex items-center gap-4">
-              <input 
-                name="price" 
-                type="number" 
-                className="w-48 border border-[#dbe0e2] rounded-md p-4 bg-[#f2f4f5] focus:bg-white focus:border-[#002f34] outline-none font-bold text-lg" 
-                onChange={handleChange} 
-                required
-                disabled={isLoading}
-              />
-              <span className="text-xl font-bold text-[#002f34]">₺</span>
-            </div>
-          </div>
-
-          <div className="flex justify-end mb-24 min-h-[64px] items-center">
-            {isLoading ? (
-              /* КРУТИЛКА */
-              <div className="flex items-center gap-3 px-14">
-                <div className="w-8 h-8 border-4 border-emerald-950/20 border-t-emerald-950 rounded-full animate-spin"></div>
-                <span className="font-bold text-[#002f34]">Publishing...</span>
               </div>
-            ) : (
-              <button className="bg-[#002f34] text-white px-14 py-4 rounded-md font-bold text-lg hover:bg-[#003d45] transition-all shadow-md active:scale-95">
-                Publish
-              </button>
-            )}
+
+              {/* Поля ввода (Применяем w-[85%] для мобилок) */}
+              <div className="w-[85%] md:w-1/2 space-y-5 md:space-y-8">
+                <div className="flex flex-col gap-2">
+                  <label className="text-[13px] font-bold text-[#002f34] uppercase tracking-wider">Title*</label>
+                  <input name="title" placeholder="For example: Iphone 15 256 GB" className="w-full border-none rounded-2xl p-4 md:p-5 bg-[#f2f4f5] focus:bg-[#e8ebed] outline-none text-base text-[#002f34] shadow-sm transition-all" onChange={handleChange} required />
+                </div>
+
+                <div className="flex flex-col gap-2">
+                  <label className="text-[13px] font-bold text-[#002f34] uppercase tracking-wider">Category*</label>
+                  <div className="relative">
+                    <select name="category_slug" className="w-full border-none rounded-2xl p-4 md:p-5 bg-[#f2f4f5] outline-none appearance-none text-[#002f34] shadow-sm cursor-pointer" onChange={handleChange} required>
+                      <option value="">Select category</option>
+                      {categories.map(cat => (
+                        <option key={cat.id} value={cat.slug}>{cat.name}</option>
+                      ))}
+                    </select>
+                    <div className="absolute inset-y-0 right-4 flex items-center pointer-events-none text-[#002f34]">
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" /></svg>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex flex-col gap-2">
+                  <label className="text-[13px] font-bold text-[#002f34] uppercase tracking-wider">Description*</label>
+                  <textarea name="description" placeholder="Write down some specific information or advantages/disadvantages about your product. That will help other people know your product." className="w-full border-none rounded-2xl p-4 md:p-5 bg-[#f2f4f5] outline-none min-h-[160px] md:min-h-[220px] text-[#002f34] resize-none shadow-sm" onChange={handleChange} required />
+                </div>
+
+                <div className="flex flex-col gap-2">
+                  <label className="text-[13px] font-bold text-[#002f34] uppercase tracking-wider">Price (₺)*</label>
+                  <input name="price" type="number" placeholder="0" className="w-full border-none rounded-2xl p-4 md:p-5 bg-[#f2f4f5] font-extrabold text-2xl outline-none text-[#002f34] shadow-sm" onChange={handleChange} required />
+                </div>
+
+                <div className="hidden md:block pt-4">
+                  <PublishButton isLoading={isLoading} />
+                </div>
+              </div>
+            </div>
+            
+            {/* Кнопка для мобилок (Тоже ограничиваем ширину) */}
+            <div className="md:hidden pt-8 w-[85%]">
+              <PublishButton isLoading={isLoading} />
+            </div>
           </div>
         </form>
       </div>
     </div>
+  );
+}
+
+function PublishButton({ isLoading }) {
+  return isLoading ? (
+    <button disabled className="w-full bg-gray-200 text-gray-500 py-5 rounded-2xl font-bold text-lg flex items-center justify-center gap-3">
+      <div className="w-5 h-5 border-2 border-gray-400 border-t-transparent rounded-full animate-spin"></div>
+      Publishing...
+    </button>
+  ) : (
+    <button className="w-full bg-[#002f34] text-white py-5 rounded-2xl font-bold text-xl active:scale-[0.98] transition-all shadow-xl shadow-emerald-950/20">
+      Publish
+    </button>
   );
 }
 
