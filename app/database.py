@@ -1,25 +1,30 @@
-from sqlalchemy import create_engine
-from sqlalchemy.orm import Session, sessionmaker, declarative_base
+from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
+from sqlalchemy.orm import sessionmaker, declarative_base
 
-from app.core.setup_token import settings
+from app.core.config import settings
 
+SQLALCHEMY_DATABASE_URL = settings.DATABASE_URL
 
-engine = create_engine(settings.DATABASE_URL)
+# Это асинхронный движок
+engine = create_async_engine(
+    SQLALCHEMY_DATABASE_URL,
+    echo = True,
+)
 
-
-SessionLocal = sessionmaker(
-    autocommit=False,
-    autoflush=False,
-    bind=engine
+# Сохдаем тут фабрику асинхронных сессий
+AsyncSessionLocal = sessionmaker(
+    engine, 
+    class_=AsyncSession,
+    expire_on_commit=False
 )
 
 
 Base = declarative_base()
 
-# Гарантрирует открытие и закрытие бд в конце сессии
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
+# Асинхронный генератор для получения сессии БД т.е возможность открыть бд и закрыть 
+async def get_db():
+    async with AsyncSessionLocal() as db:
+        try:
+            yield db
+        finally:
+            await db.close()

@@ -1,6 +1,7 @@
 import json
 
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy import select
 
 from app.schemas.category_schemas import CategoryResponse
 from app.core.redis import redis_client
@@ -8,11 +9,17 @@ from app.errors import CategoryNotFound, NotRights, DbError
 from app.models import User, UserRole, Category
 
 
-def service_create_category(category, current_user, db):
-    db_user = db.query(User).filter(
-        (User.id == current_user.id) &
-        (User.role == UserRole.ADMIN)
-    ).first()
+async def service_create_category(category, current_user, db):
+    query = (
+        select(User)
+        .where(
+            (User.id == current_user.id) &
+            (User.role == UserRole.ADMIN)
+        )
+    )
+
+    result = await db.execute(query)
+    db_user = result.scalars().first()
 
     if not db_user:
         raise NotRights()
@@ -21,26 +28,29 @@ def service_create_category(category, current_user, db):
     db.add(db_category)
 
     try:
-        db.commit()
+        await db.commit()
 
     except IntegrityError:
-        db.rollback()
+        await db.rollback()
         raise DbError()
 
-    db.refresh(db_category)
+    await db.refresh(db_category)
 
-    redis_client.delete("all_categories")
+    await redis_client.delete("all_categories")
 
     return db_category
 
 
-def service_get_categories(db):
-    cached = redis_client.get("all_categories")
+async def service_get_categories(db):
+    cached = await redis_client.get("all_categories")
 
     if cached:
         return json.loads(cached)
 
-    categories = db.query(Category).all()
+    query = select(Category)
+    
+    result = await db.execute(query)
+    categories = result.scalars().all()
 
     if not categories:
         raise CategoryNotFound()
@@ -50,28 +60,40 @@ def service_get_categories(db):
         for cat in categories
     ]
 
-    redis_client.setex(
+    await redis_client.set(
         "all_categories", 
-        86400, 
-        json.dumps(categories_for_cache)
+        json.dumps(categories_for_cache, ensure_ascii=False),
+        ex=86400 
     )
 
-    return categories
+    return categories_for_cache
 
 
-def service_delete_category(slug, current_user, db):
-    db_user = db.query(User).filter(
-        (User.id == current_user.id) &
-        (User.role == UserRole.ADMIN)
-    ).first()
+async def service_delete_category(slug, current_user, db):
+    query = (
+        select(User)
+        .where(
+            (User.id == current_user.id) &
+            (User.role == UserRole.ADMIN)
+        )
+    )
+    
+    result = await db.execute(query)
+    db_user = result.scalars().first()
 
     if not db_user:
         raise NotRights()
 
-    db_category = db.query(Category).filter(
-        (Category.slug == slug) &
-        (Category.status == Status.ACTIVE)
-    ).first()
+    query = (
+        select(Category)
+        .where(
+            (Category.slug == slug) &
+            (Category.status == Status.ACTIVE)
+        )
+    )
+
+    result = await db.execute(query)
+    db_category = result.scalars().first()
 
     if not db_category:
         raise CategoryNotFound()
@@ -79,10 +101,11 @@ def service_delete_category(slug, current_user, db):
     db_category.status = Status.ARCHIVED
 
     try:
-        db.commit()
+        await db.commit()
 
     except IntegrityError:
-        db.rollback()
+        await db.rollback()
         raise DbError()
-
+    
+    await redis_client.delete("all_categories")
     return {"status": "deleted successfully"}

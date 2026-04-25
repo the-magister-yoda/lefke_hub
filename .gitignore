@@ -5,6 +5,7 @@ venv/
 .idea/
 uploads/
 .dockerignore
+.pytest_cache/
 
 frontend/dist/
 

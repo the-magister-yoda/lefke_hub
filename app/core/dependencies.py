@@ -1,6 +1,7 @@
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
 from jose import JWTError
 
 from app.database import get_db
@@ -12,9 +13,9 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/user/login")
 oauth2_scheme_optional = OAuth2PasswordBearer(auto_error=False, tokenUrl="/user/login")
 
 
-def get_current_user(
+async def get_current_user(
     token: str = Depends(oauth2_scheme),
-    db: Session = Depends(get_db)
+    db: AsyncSession = Depends(get_db)
     ) -> User:
 
     credentials_exception = HTTPException(
@@ -23,7 +24,7 @@ def get_current_user(
     )
 
     try:
-        payload = decode_token(token)
+        payload = await decode_token(token)
         user_id: int = payload.get("sub")
 
         if user_id is None:
@@ -32,7 +33,10 @@ def get_current_user(
     except JWTError:
         raise credentials_exception
 
-    user = db.query(User).filter(User.id == int(user_id)).first()
+    query = select(User).where(User.id == int(user_id))
+
+    result = await db.execute(query)
+    user = result.scalar()
 
     if user is None:
         raise credentials_exception
@@ -40,19 +44,22 @@ def get_current_user(
     return user
 
 
-def get_possible_user(token: str = Depends(oauth2_scheme_optional), db: Session = Depends(get_db)):
+async def get_possible_user(token: str = Depends(oauth2_scheme_optional), db: AsyncSession = Depends(get_db)):
 
     if not token:
         return None
 
     try:
-        payload = decode_token(token)
+        payload = await decode_token(token)
         user_id: int = payload.get("sub")
 
     except JWTError:
         return None
 
-    user = db.query(User).filter(User.id == int(user_id)).first()
+    query = select(User).where(User.id == int(user_id))
+
+    result = await db.execute(query)
+    user = result.scalar()
 
     return user
 

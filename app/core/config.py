@@ -12,11 +12,19 @@ class Settings(BaseSettings):
     POSTGRES_PORT: int
 
     REDIS_URL: str
+
+    EMAIL_HOST: str
+    EMAIL_PORT: int
+    EMAIL_USER: str
+    EMAIL_FROM: str
+    EMAIL_PASSWORD: str
     
+
     @property
     def DATABASE_URL(self):
-        return f"postgresql+psycopg2://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}@{self.POSTGRES_HOST}:{self.POSTGRES_PORT}/{self.POSTGRES_DB}"
+        return f"postgresql+asyncpg://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}@{self.POSTGRES_HOST}:{self.POSTGRES_PORT}/{self.POSTGRES_DB}"
 
-    model_config = SettingsConfigDict(env_file=".env")
+    model_config = SettingsConfigDict(env_file=".env", extra='ignore')
+
 
 settings = Settings()

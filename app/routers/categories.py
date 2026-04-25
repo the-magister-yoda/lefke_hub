@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 from functools import wraps
 from typing import List
 
@@ -16,9 +16,9 @@ router = APIRouter()
 
 def handle_category_errors(func):
     @wraps(func)
-    def wrapper(*args, **kwargs):
+    async def wrapper(*args, **kwargs):
         try:
-            return func(*args, **kwargs)
+            return await func(*args, **kwargs)
 
         except CategoryNotFound:
             raise HTTPException(status_code=404, detail="Categories not found, add one to continue.")
@@ -34,17 +34,17 @@ def handle_category_errors(func):
 
 @router.post("/", response_model=CategoryResponse)
 @handle_category_errors
-def create_category(category_data: CategoryCreate, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
-    return service_create_category(category_data, current_user, db)
+async def create_category(category_data: CategoryCreate, current_user: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)):
+    return await service_create_category(category_data, current_user, db)
 
 
 @router.get("/", response_model=List[CategoryResponse])
 @handle_category_errors
-def get_categories(db: Session = Depends(get_db)):
-    return service_get_categories(db)
+async def get_categories(db: AsyncSession = Depends(get_db)):
+    return await service_get_categories(db)
 
 
 @router.delete("/{slug}")
 @handle_category_errors
-def delete_categoris(slug: str, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
-    return service_delete_category(slug, current_user, db)
+async def delete_categoris(slug: str, current_user: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)):
+    return await service_delete_category(slug, current_user, db)

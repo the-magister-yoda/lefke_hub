@@ -1,5 +1,5 @@
-from fastapi import APIRouter, Depends
-from sqlalchemy.orm import Session
+from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy.ext.asyncio import AsyncSession
 from functools import wraps
 from typing import List
 
@@ -15,9 +15,9 @@ router = APIRouter()
 
 def handle_favorite_errors(func):
     @wraps(func)
-    def wrapper(*args, **kwargs):
+    async def wrapper(*args, **kwargs):
         try:
-            return func(*args, **kwargs)
+            return await func(*args, **kwargs)
 
         except AdsNotFound:
             raise HTTPException(status_code=404, detail='There no ad(s) currently please add one to watch.')
@@ -30,11 +30,11 @@ def handle_favorite_errors(func):
 
 @router.get("/", response_model=List[FavoriteResponse])
 @handle_favorite_errors
-def get_favorites(current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
-    return service_get_favorites(current_user, db)
+async def get_favorites(current_user: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)):
+    return await service_get_favorites(current_user, db)
 
 
 @router.post("/{ad_id}")
 @handle_favorite_errors
-def toggle_favorite(ad_id: int, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
-    return service_toggle_favorite(ad_id, user, db)
+async def toggle_favorite(ad_id: int, user: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)):
+    return await service_toggle_favorite(ad_id, user, db)

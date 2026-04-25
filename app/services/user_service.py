@@ -1,18 +1,27 @@
-from sqlalchemy import desc, asc
+import secrets 
+
+from sqlalchemy import select, desc, asc, func
 from sqlalchemy.exc import IntegrityError
 
 from app.models import User, Status, UserRole
 from app.errors import UserNotFound, UsernameAlreadyExists, UserActive, AlreadyDeleted, NotRights
 from app.errors import DbError, WrongPassword, EmailAlreadyExists, PhoneNumAlreadyExists, EmptyRequest
+from app.utils.email_send import send_reset_password_email
 from app.core.security import hash_password, verify_password, create_access_token
 
 
-def service_register_user(user, db):
-    existing_user = db.query(User).filter(
-        (User.username == user.username) |
-        (User.email == user.email) |
-        (User.phone_number == user.phone_number)
-    ).first()
+async def service_register_user(user, db):
+    query = (
+        select(User)
+        .where(
+            (User.username == user.username) |
+            (User.email == user.email) |
+            (User.phone_number == user.phone_number)
+        )
+    )
+
+    result = await db.execute(query)
+    existing_user = result.scalar()
 
     if existing_user is not None:
         if existing_user.username == user.username:
@@ -34,18 +43,21 @@ def service_register_user(user, db):
     db.add(db_user)
 
     try:
-        db.commit()
+        await db.commit()
 
     except IntegrityError:
-        db.rollback()
+        await db.rollback()
         raise DbError()
 
-    db.refresh(db_user)
+    await db.refresh(db_user)
     return db_user
 
 
-def service_login_user(form_data, db):
-    db_user = db.query(User).filter(User.username == form_data.username).first()
+async def service_login_user(form_data, db):
+    query = select(User).where(User.username == form_data.username)
+    
+    result = await db.execute(query)
+    db_user = result.scalar()
 
     if db_user is None:
         raise UserNotFound()
@@ -53,15 +65,18 @@ def service_login_user(form_data, db):
     if not verify_password(form_data.password, db_user.hashed_password):
         raise WrongPassword()
 
-    access_token = create_access_token(
+    access_token =  await create_access_token(
         data={"sub": str(db_user.id), "role": db_user.role.value}
     )
 
     return {"access_token": access_token, "token_type": "bearer"}
 
 
-def service_get_user(user_id, db):
-    db_user = db.query(User).filter(User.id == user_id).first()
+async def service_get_user(user_id, db):
+    query = select(User).where(User.id == user_id)
+
+    result = await db.execute(query)
+    db_user = result.scalar()
 
     if not db_user:
         raise UserNotFound()
@@ -69,14 +84,20 @@ def service_get_user(user_id, db):
     return db_user
 
 
-def service_update_user(user_data, current_user, db):
-    db_user = db.query(User).filter(User.id == current_user.id).first()
+async def service_update_user(user_data, current_user, db):
+    query = select(User).where(User.id == current_user.id)
+
+    result = await db.execute(query)
+    db_user = result.scalar()
 
     if not db_user:
         raise UserNotFound()
 
     if user_data.email:
-        user = db.query(User).filter(User.email == user_data.email).first()
+        query = select(User).where(User.email == user_data.email)
+
+        result = await db.execute(query)
+        user = result.scalar()
 
         if user:
             raise EmailAlreadyExists()
@@ -85,7 +106,10 @@ def service_update_user(user_data, current_user, db):
             db_user.email = user_data.email
 
     if user_data.phone_number:
-        user = db.query(User).filter(User.phone_number == user_data.phone_number).first()
+        query = select(User).where(User.phone_number == user_data.phone_number)
+        
+        result = await db.execute(query)
+        user = result.scalar()
 
         if user:
             raise PhoneNumAlreadyExists()
@@ -100,14 +124,17 @@ def service_update_user(user_data, current_user, db):
     if user_data.email is None and user_data.phone_number is None and user_data.password is None:
         raise EmptyRequest()
 
-    db.commit()
-    db.refresh(db_user)
+    await db.commit()
+    await db.refresh(db_user)
 
     return db_user
 
 
-def service_delete_user(user_id, current_user, db):
-    db_user = db.query(User).filter(User.id == user_id).first()
+async def service_delete_user(user_id, current_user, db):
+    query = select(User).where(User.id == user_id)
+
+    result = await db.execute(query)
+    db_user = result.scalar()
 
     if db_user is None:
         raise UserNotFound()
@@ -120,31 +147,46 @@ def service_delete_user(user_id, current_user, db):
 
     db_user.status = Status.ARCHIVED
 
-    db.commit()
-    db.refresh(db_user)
+    await db.commit()
+    await db.refresh(db_user)
 
     return db_user
 
 
-def service_restore_user(user, db):
-    db_user = db.query(User).filter(User.username == user.username).first()
+async def service_restore_password(username, email, db):
+    query = (
+        select(User)
+        .where(
+            (User.username == username) &
+            (User.email == email)
+        )
+    )
 
-    if db_user is None:
+    result = await db.execute(query)
+    db_user = result.scalar()
+
+    if not db_user:
         raise UserNotFound()
 
-    if db_user.status == Status.ACTIVE:
-        raise UserActive()
+    temp_password = secrets.token_hex(4)
+    hashed_password = hash_password(temp_password)
 
-    db_user.status = Status.ACTIVE
+    try:
+        db_user.hashed_password = hashed_password
+        await db.commit()
 
-    db.commit()
-    db.refresh(db_user)
+    except IntegrityError:
+        await db.rollback()
+        raise DbError()
 
-    return db_user
+    send_reset_password_email.delay(db_user.email, temp_password)
 
 
-def service_get_me(current_user, db):
-    db_user = db.query(User).filter(User.id == current_user.id).first()
+async def service_get_me(current_user, db):
+    query = select(User).where(User.id == current_user.id)
+
+    result = await db.execute(query)
+    db_user = result.scalar()
 
     if not db_user:
         raise UserNotFound()
@@ -152,47 +194,56 @@ def service_get_me(current_user, db):
     return db_user
 
 
-def service_get_all_users(skip, limit, user, user_filter, db):
+async def service_get_all_users(skip, limit, user, user_filter, db):
     if user.role != UserRole.ADMIN:
         raise NotRights()
 
-    query = db.query(User)
+    query = select(User)
 
     if user_filter.only_active:
-        query = query.filter(User.status == Status.ACTIVE)
+        query = query.where(User.status == Status.ACTIVE)
 
     if user_filter.search:
-        query = query.filter(User.username.ilike(f"%{user_filter.search}%"))
+        query = query.where(User.username.ilike(f"%{user_filter.search}%"))
 
     if user_filter.sort_by == 'date_desc':
         query = query.order_by(desc(User.created_at))
-
     elif user_filter.sort_by == 'date_asc':
         query = query.order_by(asc(User.created_at))
 
-    total = query.count()
+    count_query = select(func.count()).select_from(query.subquery())
+    total_result = await db.execute(count_query)
+    total = total_result.scalar() or 0
 
     if total == 0:
         raise UserNotFound()
 
-    items = query.offset(skip).limit(limit).all()
+    query = query.offset(skip).limit(limit)
+    result = await db.execute(query)
+    items = result.scalars().all() 
 
     return {"total": total, "items": items}
 
 
-def service_create_admin(user, db):
-    db_user = db.query(User).filter(
+async def service_create_admin(user, db):
+    query = (
+        select(User)
+        .where(
             (User.id == user.id) &
             (User.role == UserRole.USER)
-        ).first()
+        )
+    )
+
+    result = await db.execute(query)
+    db_user = result.scalar()
 
     if not db_user:
         raise UserNotFound()
     
     db_user.role = UserRole.ADMIN
 
-    db.commit()
-    db.refresh(db_user)
+    await db.commit()
+    await db.refresh(db_user)
 
     return db_user
 

@@ -1,16 +1,18 @@
-import redis
 import os
+import redis.asyncio as redis
+from app.core.config import settings
 
+REDIS_URL = settings.REDIS_URL
 
-REDIS_URL = os.getenv("REDIS_URL")
-
-
-# Создание клиента он автоматически упр-ет пулом соединений
-redis_client = redis.from_url(
-    REDIS_URL, 
-    encoding="utf-8", 
+# Создаем пул соединений 
+pool = redis.ConnectionPool.from_url(
+    REDIS_URL,
+    encoding="utf-8",
     decode_responses=True
 )
 
-def get_redis():
-    return redis_client
+
+def get_redis() -> redis.Redis:
+    return redis.Redis(connection_pool=pool)
+
+redis_client = redis.Redis(connection_pool=pool)

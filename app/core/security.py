@@ -1,28 +1,24 @@
-from jose import JWTError, jwt
+from jose import JWTError, jwt 
 from passlib.context import CryptContext
 from datetime import datetime, timedelta
 
-from app.core.setup_token import settings
+from app.core.config import settings
 
-
-# Создаем контекст шифрования
 pwd_context = CryptContext(
     schemes=["bcrypt"],
     deprecated="auto"
 )
 
 
-# Хэширует обычный пароль
 def hash_password(password: str) -> str:
     return pwd_context.hash(password)
 
 
-# Проверяет совпадение обычного пароля и хэша
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     return pwd_context.verify(plain_password, hashed_password)
 
 
-def create_access_token(data: dict) -> str:
+async def create_access_token(data: dict) -> str:
     to_encode = data.copy()
     expire = datetime.utcnow() + timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
     to_encode.update({"exp": expire})
@@ -32,13 +28,12 @@ def create_access_token(data: dict) -> str:
         settings.SECRET_KEY,
         algorithm=settings.ALGORITHM
     )
+    return encoded_jwt 
 
-    return encoded_jwt
-
-
-def decode_token(token: str):
+async def decode_token(token: str):
+   
     return jwt.decode(
-        token,
-        settings.SECRET_KEY,
+        token, 
+        settings.SECRET_KEY, 
         algorithms=[settings.ALGORITHM]
     )
