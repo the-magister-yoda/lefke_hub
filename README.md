@@ -1,7 +1,7 @@
-LefkeHub — Сайт портал для студентов и жителей региона
+LefkeHub — Онлайн платформа для студентов и жителей региона
 
-Сервис для публикации объявлений (продажа вещей, услуги, поиск соседей). 
-Проект написан с фокусом на производительность и чистую архитектуру.
+Онлайн платформа для публикации объявлений (продажи вещей, предоствавления услуг, поиск соседей). 
+Проект написан асинхронно с фокусом на производительность и чистую архитектуру.
 
 🚀 Основной стек:
 
@@ -11,7 +11,7 @@ Frontend: React + Vite.
 
 Infra: Docker & Docker-compose, Nginx (reverse proxy).
 
-Optimization: Redis (caching), Alembic (migrations).
+Optimization: Celery (email messsages), Redis (caching), Alembic (migrations).
 
 Testing: Pytest.
 
@@ -35,7 +35,7 @@ DevOps: Проект полностью контейнеризирован. На
 
 Bash
 
-git clone https://github.com/твой-логин/lefke-hub.git
+git clone https://github.com/the-magister-yoda/lefke_hub
 
 cd lefke-hub
 
