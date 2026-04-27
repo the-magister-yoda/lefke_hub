@@ -27,7 +27,7 @@ class AdResponse(BaseModel):
     title: str
     price: Decimal
     category: CategoryResponse
-    main_image: str 
+    main_image: Optional[str] = None 
     is_favorite: bool = False
     created_at: datetime
     views: int
