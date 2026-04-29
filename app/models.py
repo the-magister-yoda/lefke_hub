@@ -3,6 +3,7 @@ import enum
 from sqlalchemy import Column, Integer, Numeric, String, DateTime, Enum, ForeignKey
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
+from pgvector.sqlalchemy import Vector
 
 from app.database import Base
 
@@ -59,6 +60,7 @@ class Ad(Base):
     created_at = Column(DateTime, default=func.now())
     status = Column(Enum(Status), nullable=False, default=Status.ACTIVE)
     views = Column(Integer, default=0)
+    embedding = Column(Vector(768), nullable=True)
 
     user = relationship("User", back_populates="ads")
     images = relationship("AdImage", back_populates="ad", cascade="all, delete")
