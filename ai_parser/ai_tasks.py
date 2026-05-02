@@ -46,3 +46,20 @@ async def analyze_with_ai(text):
 
     except Exception as e:
         return {"is_ad": False}
+
+
+async def get_embedding(title: str, description: str):
+    # Генерируем вектор для текста объявления
+    text_to_embed = f"{title}\n{description}"
+
+    try:
+        response = client.models.embed_content(
+            model="gemini-embedding-2",
+            contents=text_to_embed
+        )
+        # Возвращаем список чисел (вектор)
+        return response.embeddings[0].values
+
+    except Exception as e:
+        print(f"Ошибка {e}")
+        return None

@@ -66,6 +66,3 @@ async def catch_message(client, message):
 if __name__ == "__main__":
     app.run()
 
-
-
-

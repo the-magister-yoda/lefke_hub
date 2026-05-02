@@ -1,6 +1,8 @@
-import os
 import httpx
+import json
+import os
 
+from ai_tasks import get_embedding
 from dotenv import load_dotenv
 
 
@@ -30,8 +32,9 @@ async def login_to_api():
 
     
 async def send_to_api(ad_data: dict, photo_path: str, token: str):
-    url = "http://127.0.0.1:8000/ad/create"
+    vector = await get_embedding(ad_data['title'], ad_data['description'])
 
+    url = "http://127.0.0.1:8000/ad/create"
     headers = {
         "Authorization": f"Bearer {token}"
     }
@@ -40,7 +43,8 @@ async def send_to_api(ad_data: dict, photo_path: str, token: str):
         "title": str(ad_data['title']),
         "description": str(ad_data['description']),
         "price": ad_data['price'],
-        "category_slug": ad_data['category_slug']
+        "category_slug": ad_data['category_slug'],
+        "embedding": json.dumps(vector) if vector else None
     }
 
     files = []
