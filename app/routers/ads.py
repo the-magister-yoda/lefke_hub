@@ -1,3 +1,5 @@
+import json
+
 from fastapi import APIRouter, HTTPException, Depends, UploadFile, File, Form
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -12,7 +14,6 @@ from app.core.dependencies import get_current_user, get_possible_user
 from app.schemas.ad_schemas import AdCreate, AdResponse, AdFullResponse, AdUpdate, AdFilterSchema, AdListResponse
 from app.services.ad_service import service_create_ad, service_update_ad, service_delete_ad, service_restore_ad
 from app.services.ad_service import service_get_ads, service_get_ad, service_get_my_ads, service_get_my_archived_ads
-# from app.services.ad_service import service_create_bot_ad
 
 
 router = APIRouter()
@@ -28,7 +29,7 @@ def handle_ads_errors(func):
             raise HTTPException(status_code=404, detail='There no ad(s) currently please add one to watch.')
 
         except CategoryNotFound:
-            raise HTTPExceptionT(status=400, detail='Please enter valid category name.')
+            raise HTTPException(status=400, detail='Please enter valid category name.')
 
         except EmptyRequest:
             raise HTTPException(status_code=404, detail="Empty request please put some data in.")
@@ -46,16 +47,24 @@ async def create_ad(
     description: str = Form(...),
     price: Decimal = Form(...),
     category_slug: str = Form(...),
+    embedding: str = Form(None),
     images: List[UploadFile] = File(None),
     user = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
+    vector_data = None
+    if embedding:
+        try:
+            vector_data = json.loads(embedding)
+        except Exception:
+            raise DbError()
 
     ad = AdCreate(
         title=title,
         description=description,
         price=price,
-        category_slug=category_slug
+        category_slug=category_slug,
+        embedding=vector_data
     )
 
     return await service_create_ad(ad, images, user, db)

@@ -60,7 +60,7 @@ class Ad(Base):
     created_at = Column(DateTime, default=func.now())
     status = Column(Enum(Status), nullable=False, default=Status.ACTIVE)
     views = Column(Integer, default=0)
-    embedding = Column(Vector(768), nullable=True)
+    embedding = Column(Vector(3072), nullable=True)
 
     user = relationship("User", back_populates="ads")
     images = relationship("AdImage", back_populates="ad", cascade="all, delete")

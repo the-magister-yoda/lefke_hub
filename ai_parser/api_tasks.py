@@ -18,7 +18,7 @@ async def login_to_api():
     }
 
     async with httpx.AsyncClient() as client:
-        response await client.post(url, data=payload)
+        response = await client.post(url, data=payload)
 
         if response.status_code == 200:
             token_data = response.json()
@@ -44,10 +44,10 @@ async def send_to_api(ad_data: dict, photo_path: str, token: str):
     }
 
     files = []
-        if photo_path and os.path.exists(photo_path):
+    if photo_path and os.path.exists(photo_path):
         files.append(
             ("images", (os.path.basename(photo_path), open(photo_path, "rb"), "image/jpeg"))
-        )
+            )
 
     try:
         async with httpx.AsyncClient() as client:

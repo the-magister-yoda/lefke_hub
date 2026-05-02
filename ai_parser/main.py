@@ -1,7 +1,7 @@
 import os
 import asyncio
 
-from pyrogram import Client,
+from pyrogram import Client, filters
 from dotenv import load_dotenv
 from ai_parser.ai_tasks import analyze_with_ai
 from ai_parser.api_tasks import login_to_api, send_to_api

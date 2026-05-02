@@ -29,6 +29,7 @@ async def service_create_ad(ad, images, user, db):
         description=ad.description,
         price=ad.price, 
         category_id=db_category.id,
+        embedding=ad.embedding,
         owner_id=user.id
     )
     db.add(db_add)

@@ -13,6 +13,7 @@ class AdCreate(BaseModel):
     description: str
     price: Decimal
     category_slug: str
+    embedding: Optional[List[float]] = None
 
 
 class AdImageResponse(BaseModel):
