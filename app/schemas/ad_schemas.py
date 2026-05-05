@@ -26,13 +26,14 @@ class AdImageResponse(BaseModel):
 class AdResponse(BaseModel):
     id: int
     title: str
+    description: str
     price: Decimal
     category: CategoryResponse
     main_image: Optional[str] = None 
-    is_favorite: bool = False
-    created_at: datetime
-    views: int
-    status: Status
+    # is_favorite: bool = False
+    # created_at: datetime
+    # views: int
+    # status: Status
 
     class Config:
         from_attributes = True
@@ -75,3 +76,8 @@ class AdListResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+class SearchRequest(BaseModel):
+    vector: List[float]
+    

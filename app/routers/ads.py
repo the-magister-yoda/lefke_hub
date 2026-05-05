@@ -11,9 +11,11 @@ from app.models import Ad, User
 from app.database import get_db
 from app.errors import AdsNotFound, DbError, EmptyRequest, CategoryNotFound
 from app.core.dependencies import get_current_user, get_possible_user
-from app.schemas.ad_schemas import AdCreate, AdResponse, AdFullResponse, AdUpdate, AdFilterSchema, AdListResponse
+from app.schemas.ad_schemas import AdCreate, AdResponse, AdFullResponse, AdListResponse
+from app.schemas.ad_schemas import AdUpdate, AdFilterSchema, SearchRequest
 from app.services.ad_service import service_create_ad, service_update_ad, service_delete_ad, service_restore_ad
 from app.services.ad_service import service_get_ads, service_get_ad, service_get_my_ads, service_get_my_archived_ads
+from app.services.ad_service import service_search_ads
 
 
 router = APIRouter()
@@ -52,22 +54,21 @@ async def create_ad(
     user = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
-    vector_data = None
-    if embedding:
-        try:
-            vector_data = json.loads(embedding)
-        except Exception:
-            raise DbError()
 
     ad = AdCreate(
         title=title,
         description=description,
         price=price,
         category_slug=category_slug,
-        embedding=vector_data
+        embedding=embedding
     )
 
     return await service_create_ad(ad, images, user, db)
+
+
+@router.post("/search", response_model=List[AdResponse])
+async def search_ads(data: SearchRequest, db: AsyncSession = Depends(get_db)):
+    return await service_search_ads(data, db)
 
 
 @router.get("/", response_model=AdListResponse)

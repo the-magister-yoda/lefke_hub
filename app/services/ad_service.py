@@ -1,15 +1,18 @@
 import os
+import json
 import anyio
 
 from uuid import  uuid4
 from sqlalchemy import select, func, and_, exists, desc, asc, false
 from sqlalchemy.orm import joinedload, selectinload
 from sqlalchemy.exc import IntegrityError
+from pgvector.sqlalchemy import VECTOR
 
 from app.utils.image_processing import process_and_save_image
 from app.models import Ad, AdImage, Status, Category, Favorite
 from app.errors import AdsNotFound, DbError, EmptyRequest, CategoryNotFound
 
+from ai_parser.ai_tasks import get_embedding
 
 UPLOAD_DIR = "uploads/ads"
 
@@ -23,13 +26,28 @@ async def service_create_ad(ad, images, user, db):
     if not db_category:
         raise CategoryNotFound()
     
+    vector_data = None
+
+    if ad.embedding:
+        if isinstance(ad.embedding, str):
+            try:
+                vector_data = json.loads(ad.embedding)
+            except Exception:
+                raise DbError("Некорректный формат эмбеддинга.")
+        
+        else:
+            vector_data = ad.embedding
+    
+    else:
+        vector_data = await get_embedding(ad.title, ad.description)
+
     # 2. Создание объекта объявления
     db_add = Ad(
         title=ad.title, 
         description=ad.description,
         price=ad.price, 
         category_id=db_category.id,
-        embedding=ad.embedding,
+        embedding=vector_data,
         owner_id=user.id
     )
     db.add(db_add)
@@ -74,6 +92,24 @@ async def service_create_ad(ad, images, user, db):
     except IntegrityError:
         await db.rollback()
         raise DbError()
+    
+
+async def service_search_ads(data, db):
+    # Ищем 5 самых похожих объявлений по смыслу
+    query = (
+        select(Ad)
+        .options(
+            joinedload(Ad.category),
+            joinedload(Ad.user) # Если нужно загрузить еще и юзера
+        )
+        .order_by(Ad.embedding.cosine_distance(data.vector))
+        .limit(5)
+    )
+
+    result = await db.execute(query)
+    ads = result.scalars().all()
+
+    return ads
 
 
 async def service_get_ads(skip: int, limit: int, ad, user, db):
